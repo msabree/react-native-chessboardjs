@@ -1,41 +1,40 @@
-import React, {useState} from 'react';
-import {useSharedValue} from 'react-native-reanimated';
+import React, { useState } from 'react';
+import { useSharedValue } from 'react-native-reanimated';
 import ChessPiece from '../ChessPiece/ChessPiece';
-import {FenPosition, Square} from '../../types';
-import {Dimensions, Pressable, StyleSheet, Text, View} from 'react-native';
+import type { FenPosition, Square } from '../../@types';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   COLUMN_LABELS,
   COLUMN_LENGTH,
   MARGIN,
   ROW_LENGTH,
 } from '../../constants';
-import {fenTo2dArray, getPosition} from '../../utils';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {flipBoard} from '../../utils/flipBoard';
+import { fenTo2dArray, getPosition } from '../../utils';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { flipBoard } from '../../utils/flipBoard';
 
 const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 
-const Chessboard = ({
+export const Chessboard = ({
   position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   boardOrientation = 'white',
   onPieceDrop,
   onSquareClick = () => true,
-  customDarkSquareStyle = {backgroundColor: 'black'},
-  customLightSquareStyle = {backgroundColor: 'white'},
+  customDarkSquareStyle = { backgroundColor: 'black' },
+  customLightSquareStyle = { backgroundColor: 'white' },
   customSquareStyles = new Map<string, object>(),
-  customBoardStyle = {},
 }: ChessBoardProps) => {
-  const board: {square: string}[][] = [];
+  const board: { square: string }[][] = [];
   for (let i = 0; i < COLUMN_LENGTH; i++) {
     const rows = [];
     for (let j = 0; j < ROW_LENGTH; j++) {
-      rows.push({square: `${COLUMN_LABELS[j]}${8 - i}`});
+      rows.push({ square: `${COLUMN_LABELS[j]}${8 - i}` });
     }
     board.push(rows);
   }
 
   const [boardState, setBoardState] = useState<FenPosition[][]>(
-    fenTo2dArray(position),
+    fenTo2dArray(position)
   );
 
   const squareToHighlight = useSharedValue<number>(-1);
@@ -64,7 +63,7 @@ const Chessboard = ({
               }}
             />
           );
-        }),
+        })
       )}
       {/* Overlay of chess pieces */}
       {boardStateOriented.map((row, index) =>
@@ -82,7 +81,7 @@ const Chessboard = ({
             onSquareClick={onSquareClick}
             position={getPosition(index * COLUMN_LENGTH + idx)}
           />
-        )),
+        ))
       )}
 
       <Pressable
@@ -92,28 +91,31 @@ const Chessboard = ({
 
           console.log('clicked');
           setBoardState(fenTo2dArray(position));
-        }}>
+        }}
+      >
         <Text>Reset</Text>
       </Pressable>
     </GestureHandlerRootView>
   );
 };
 
-export default Chessboard;
-
-const styles = (idx: number, index: number, position: {x: number; y: number}) =>
+const styles = (
+  idx: number,
+  index: number,
+  position: { x: number; y: number }
+) =>
   StyleSheet.create({
     chessSquare: {
       position: 'absolute',
       width: SIZE,
       height: SIZE,
       margin: MARGIN * 2,
-      transform: [{translateX: position.x}, {translateY: position.y}],
+      transform: [{ translateX: position.x }, { translateY: position.y }],
     },
   });
 
 const mainStyles = StyleSheet.create({
-  resetButton: {position: 'absolute', bottom: 0, right: 200},
+  resetButton: { position: 'absolute', bottom: 0, right: 200 },
 });
 
 type ChessBoardProps = {

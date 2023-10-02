@@ -49,6 +49,12 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-native": "0.72.4",
+    "react-native-gesture-handler": "^2.12.1",
+    "react-native-reanimated": "^3.5.3"
+  },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",
     "@evilmartians/lefthook": "^1.5.0",
@@ -80,6 +86,9 @@
   "workspaces": [
     "example"
   ],
+  "compilerOptions": {
+    "typeRoots": ["src/@types", "node_modules/@types"]
+  },
   "packageManager": "yarn@3.6.1",
   "engines": {
     "node": ">= 18.0.0"

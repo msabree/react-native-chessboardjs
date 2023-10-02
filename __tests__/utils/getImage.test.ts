@@ -1,6 +1,6 @@
 // test getImage function in src/utils/getImage.ts
 import {getImage} from '../../src/utils/getImage';
-import {FenPosition} from '../../src/types';
+import {FenPosition} from '../../src/@types';
 
 describe('getImage', () => {
   const testCases = [

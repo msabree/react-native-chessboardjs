@@ -1,4 +1,4 @@
-import {FenPosition} from '../types';
+import {FenPosition} from '../@types';
 
 // write a function to convert fen string to 2d array
 export const fenTo2dArray = (fen: string): FenPosition[][] => {

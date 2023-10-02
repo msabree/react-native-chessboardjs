@@ -10,7 +10,7 @@ import Animated, {
   SharedValue,
   cancelAnimation,
 } from 'react-native-reanimated';
-import {FenPosition, Square} from '../../types';
+import {FenPosition, Square} from '../../@types';
 import {COLUMN_LENGTH, MARGIN, columns, rows} from '../../constants';
 import {getPosition, getSquare, getImage} from '../../utils';
 
