@@ -1,4 +1,4 @@
-import {FenPosition} from '../@types';
+import type { FenPosition } from '../@types';
 
 export const getImage = (piece: FenPosition) => {
   switch (piece) {

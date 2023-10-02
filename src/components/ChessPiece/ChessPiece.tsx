@@ -1,18 +1,18 @@
 import React from 'react';
-import {Dimensions} from 'react-native';
-import {PanGestureHandler} from 'react-native-gesture-handler';
+import { Dimensions } from 'react-native';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   withSpring,
   useSharedValue,
   useAnimatedGestureHandler,
   useAnimatedReaction,
-  SharedValue,
+  type SharedValue,
   cancelAnimation,
 } from 'react-native-reanimated';
-import {FenPosition, Square} from '../../@types';
-import {COLUMN_LENGTH, MARGIN, columns, rows} from '../../constants';
-import {getPosition, getSquare, getImage} from '../../utils';
+import type { FenPosition, Square } from '../../@types';
+import { COLUMN_LENGTH, MARGIN, columns, rows } from '../../constants';
+import { getPosition, getSquare, getImage } from '../../utils';
 
 const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 
@@ -28,7 +28,6 @@ const ChessPiece = ({
   onSquareClick,
   position,
 }: ChessSquareProps) => {
-  console.log(position.x);
   const translateX = useSharedValue(position.x);
   const translateY = useSharedValue(position.y);
 
@@ -61,14 +60,14 @@ const ChessPiece = ({
       } else {
         isHovered.value = false;
       }
-    },
+    }
   );
 
   useAnimatedReaction(
     () => trueIndex,
     (index, oldIndex) => {
       console.log(index, oldIndex);
-    },
+    }
   );
 
   const panGesture = useAnimatedGestureHandler({
@@ -166,9 +165,9 @@ const ChessPiece = ({
       zIndex: zIndex,
       backgroundColor,
       transform: [
-        {translateX: translateX.value},
-        {translateY: translateY.value},
-        {scale},
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale },
       ],
     };
   });
@@ -184,21 +183,21 @@ const ChessPiece = ({
       width: SIZE,
       height: SIZE,
       backgroundColor,
-      transform: [{translateX: position.x}, {translateY: position.y}],
+      transform: [{ translateX: position.x }, { translateY: position.y }],
       zIndex: 1,
     };
   });
 
   return !isNaN(+value) ? (
     isHovered ? (
-      <Animated.View key={board[row][col].square} style={chessSquare} />
+      <Animated.View key={board?.[row]?.[col]?.square} style={chessSquare} />
     ) : (
       <></>
     )
   ) : (
     <PanGestureHandler onGestureEvent={panGesture}>
       <Animated.Image
-        source={getImage(boardState[row][col])}
+        source={getImage(boardState?.[row]?.[col] ?? 'p')}
         style={chessPiece}
       />
     </PanGestureHandler>
@@ -208,7 +207,7 @@ const ChessPiece = ({
 export default ChessPiece;
 
 type ChessSquareProps = {
-  board: {square: string}[][];
+  board: { square: string }[][];
   boardState: FenPosition[][];
   row: number;
   col: number;
@@ -217,5 +216,5 @@ type ChessSquareProps = {
   trueIndex: number;
   onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
   onSquareClick: (square: Square) => boolean;
-  position: {x: number; y: number};
+  position: { x: number; y: number };
 };

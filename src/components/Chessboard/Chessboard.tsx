@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSharedValue } from 'react-native-reanimated';
 import ChessPiece from '../ChessPiece/ChessPiece';
 import type { FenPosition, Square } from '../../@types';
-import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import {
   COLUMN_LABELS,
   COLUMN_LENGTH,
@@ -33,16 +33,14 @@ export const Chessboard = ({
     board.push(rows);
   }
 
-  const [boardState, setBoardState] = useState<FenPosition[][]>(
-    fenTo2dArray(position)
-  );
+  const [boardState] = useState<FenPosition[][]>(fenTo2dArray(position));
 
   const squareToHighlight = useSharedValue<number>(-1);
   const boardOriented: {
     square: string;
   }[][] = boardOrientation === 'white' ? board : flipBoard(board);
   const boardStateOriented =
-    boardOrientation === 'white' ? boardState : flipBoard(boardState);
+    boardOrientation === 'white' ? boardState : flipBoard(boardState as any);
 
   return (
     <GestureHandlerRootView>
@@ -66,8 +64,8 @@ export const Chessboard = ({
         })
       )}
       {/* Overlay of chess pieces */}
-      {boardStateOriented.map((row, index) =>
-        row.map((square, idx) => (
+      {boardStateOriented.map((row: any, index: number) =>
+        row.map((square: any, idx: number) => (
           <ChessPiece
             key={`${square}${index}${idx}`}
             board={boardOriented}
@@ -83,18 +81,6 @@ export const Chessboard = ({
           />
         ))
       )}
-
-      <Pressable
-        style={mainStyles.resetButton}
-        onPress={() => {
-          'worklet';
-
-          console.log('clicked');
-          setBoardState(fenTo2dArray(position));
-        }}
-      >
-        <Text>Reset</Text>
-      </Pressable>
     </GestureHandlerRootView>
   );
 };
@@ -113,10 +99,6 @@ const styles = (
       transform: [{ translateX: position.x }, { translateY: position.y }],
     },
   });
-
-const mainStyles = StyleSheet.create({
-  resetButton: { position: 'absolute', bottom: 0, right: 200 },
-});
 
 type ChessBoardProps = {
   position?: string;

@@ -1,5 +1,5 @@
-import {Dimensions} from 'react-native';
-import {COLUMN_LENGTH, MARGIN} from '../constants';
+import { Dimensions } from 'react-native';
+import { COLUMN_LENGTH, MARGIN } from '../constants';
 
 const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 
