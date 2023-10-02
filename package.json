@@ -20,7 +20,7 @@
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
-    "!**/__tests__",
+    "!__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
     "!**/.*"
@@ -60,9 +60,12 @@
     "@evilmartians/lefthook": "^1.5.0",
     "@react-native/eslint-config": "^0.72.2",
     "@release-it/conventional-changelog": "^5.0.0",
+    "@testing-library/jest-native": "^5.4.3",
     "@types/jest": "^28.1.2",
     "@types/react": "~17.0.21",
     "@types/react-native": "0.70.0",
+    "@types/react-test-renderer": "^18.0.1",
+    "babel-jest": "^29.7.0",
     "commitlint": "^17.0.2",
     "del-cli": "^5.0.0",
     "eslint": "^8.4.1",
@@ -73,6 +76,7 @@
     "react": "18.2.0",
     "react-native": "0.72.5",
     "react-native-builder-bob": "^0.23.0",
+    "react-test-renderer": "^18.2.0",
     "release-it": "^15.0.0",
     "typescript": "^5.0.2"
   },
@@ -87,18 +91,14 @@
     "example"
   ],
   "compilerOptions": {
-    "typeRoots": ["src/@types", "node_modules/@types"]
+    "typeRoots": [
+      "src/@types",
+      "node_modules/@types"
+    ]
   },
   "packageManager": "yarn@3.6.1",
   "engines": {
     "node": ">= 18.0.0"
-  },
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
-      "<rootDir>/lib/"
-    ]
   },
   "commitlint": {
     "extends": [

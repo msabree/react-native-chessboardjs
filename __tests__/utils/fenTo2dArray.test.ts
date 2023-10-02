@@ -3,8 +3,8 @@
  */
 
 // test fenTo2dArray function in src/utils/fenTo2dArray.ts
-import {fenTo2dArray} from '../../src/utils/fenTo2dArray';
-import {FenPosition} from '../../src/@types';
+import { fenTo2dArray } from '../../src/utils/fenTo2dArray';
+import type { FenPosition } from '../../src/@types';
 
 describe('fenTo2dArray', () => {
   it('should return a 2d array of the fen string', () => {

@@ -1,9 +1,4 @@
-/**
- * @format
- */
-
-// test fenTo2dArray function in src/utils/fenTo2dArray.ts
-import {flipBoard} from '../../src/utils/flipBoard';
+import { flipBoard } from '../../src/utils/flipBoard';
 
 describe('flipBoard', () => {
   it('should return a 2d array flipped upside down', () => {

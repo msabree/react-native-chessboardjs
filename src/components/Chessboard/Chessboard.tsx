@@ -85,11 +85,7 @@ export const Chessboard = ({
   );
 };
 
-const styles = (
-  idx: number,
-  index: number,
-  position: { x: number; y: number }
-) =>
+const styles = (_: number, __: number, position: { x: number; y: number }) =>
   StyleSheet.create({
     chessSquare: {
       position: 'absolute',
