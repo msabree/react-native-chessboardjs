@@ -31,7 +31,6 @@ const ChessPiece = ({
   position,
   isBoardFlipped,
 }: ChessSquareProps) => {
-  console.log(position.x);
   const translateX = useSharedValue(position.x);
   const translateY = useSharedValue(position.y);
 
@@ -66,13 +65,6 @@ const ChessPiece = ({
       } else {
         isHovered.value = false;
       }
-    }
-  );
-
-  useAnimatedReaction(
-    () => trueIndex,
-    (index, oldIndex) => {
-      console.log(index, oldIndex);
     }
   );
 

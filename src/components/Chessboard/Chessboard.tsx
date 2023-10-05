@@ -12,6 +12,10 @@ import {
 import { fenTo2dArray, getPosition } from '../../utils';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+interface StylesMap {
+  [key: string]: {};
+}
+
 const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 
 const Chessboard = ({
@@ -27,7 +31,7 @@ const Chessboard = ({
   },
   customDarkSquareStyle = { backgroundColor: 'black' },
   customLightSquareStyle = { backgroundColor: 'white' },
-  customSquareStyles = new Map<string, object>(),
+  customSquareStyles = {} as StylesMap,
   boardOrientation = 'white',
 }: ChessBoardProps) => {
   const isBoardFlipped = boardOrientation === 'black';
@@ -76,7 +80,7 @@ const Chessboard = ({
                     index,
                     getPosition(index * COLUMN_LENGTH + idx, isBoardFlipped)
                   ).chessSquareOverlay,
-                  ...customSquareStyles?.get(square.square),
+                  ...customSquareStyles[square.square],
                 }}
               />
             </View>
@@ -136,7 +140,7 @@ type ChessBoardProps = {
   isDraggablePiece: (square: Square) => boolean;
   customDarkSquareStyle?: object;
   customLightSquareStyle?: object;
-  customSquareStyles?: Map<string, object>;
+  customSquareStyles?: StylesMap;
   customBoardStyle?: object;
   boardOrientation?: 'black' | 'white';
 };
