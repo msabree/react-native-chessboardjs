@@ -120,7 +120,7 @@ const ChessPiece = ({
         squareToHighlight.value = square;
       }
     },
-    onFinish: (event, ctx) => {
+    onFinish: (_, ctx) => {
       squareToHighlight.value = -1;
       const center = {
         x: translateX.value + SIZE / 2,

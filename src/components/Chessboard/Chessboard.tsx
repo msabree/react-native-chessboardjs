@@ -27,8 +27,9 @@ const Chessboard = ({
   customDarkSquareStyle = { backgroundColor: 'black' },
   customLightSquareStyle = { backgroundColor: 'white' },
   customSquareStyles = new Map<string, object>(),
-  isBoardFlipped = false,
+  boardOrientation = 'white',
 }: ChessBoardProps) => {
+  const isBoardFlipped = boardOrientation === 'black';
   const board: { square: string }[][] = [];
   for (let i = 0; i < COLUMN_LENGTH; i++) {
     const rows = [];
@@ -107,11 +108,7 @@ const Chessboard = ({
 
 export default Chessboard;
 
-const styles = (
-  idx: number,
-  index: number,
-  position: { x: number; y: number }
-) =>
+const styles = (_: number, __: number, position: { x: number; y: number }) =>
   StyleSheet.create({
     chessSquare: {
       position: 'absolute',
@@ -140,5 +137,5 @@ type ChessBoardProps = {
   customLightSquareStyle?: object;
   customSquareStyles?: Map<string, object>;
   customBoardStyle?: object;
-  isBoardFlipped?: boolean;
+  boardOrientation?: 'black' | 'white';
 };

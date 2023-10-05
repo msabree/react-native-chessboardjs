@@ -1,3 +1,3 @@
-import { Chessboard } from './components/Chessboard/Chessboard';
+import Chessboard from './components/Chessboard/Chessboard';
 
 export default Chessboard;
