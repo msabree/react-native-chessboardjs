@@ -1,5 +1,6 @@
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import { Dimensions } from 'react-native';
+import { Dimensions, TouchableWithoutFeedback } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -26,8 +27,11 @@ const ChessPiece = ({
   trueIndex,
   onPieceDrop,
   onSquareClick,
+  isDraggablePiece,
   position,
+  isBoardFlipped,
 }: ChessSquareProps) => {
+  console.log(position.x);
   const translateX = useSharedValue(position.x);
   const translateY = useSharedValue(position.y);
 
@@ -76,11 +80,11 @@ const ChessPiece = ({
         x: translateX.value + SIZE / 2,
         y: translateY.value + SIZE / 2,
       };
-      const square = getSquare(center.x, center.y);
+      const square = getSquare(center.x, center.y, isBoardFlipped);
       const squareName = getSquareName(square);
+      onSquareClick(squareName);
 
-      if (!squareName || onSquareClick(squareName) === false) {
-        console.log('first');
+      if (isDraggablePiece(squareName) === false) {
         cancelAnimation(translateX);
         cancelAnimation(translateY);
       } else {
@@ -94,13 +98,19 @@ const ChessPiece = ({
         x: translateX.value + SIZE / 2,
         y: translateY.value + SIZE / 2,
       };
-      const square = getSquare(center.x, center.y);
-      // const squareName = getSquareName(square);
-      //@ts-ignore
-      const startingSquare = getSquare(ctx.startX, ctx.startY);
+      const square = getSquare(center.x, center.y, isBoardFlipped);
+      const startingSquare = getSquare(
+        //@ts-ignore
+        ctx.startX,
+        ctx.startY,
+        isBoardFlipped
+      );
       const startingSquareName = getSquareName(startingSquare);
 
-      if (!startingSquareName || onSquareClick(startingSquareName) === false) {
+      if (
+        !startingSquareName ||
+        isDraggablePiece(startingSquareName) === false
+      ) {
         cancelAnimation(translateX);
         cancelAnimation(translateY);
       } else {
@@ -110,16 +120,20 @@ const ChessPiece = ({
         squareToHighlight.value = square;
       }
     },
-    onFinish: (_, ctx) => {
+    onFinish: (event, ctx) => {
       squareToHighlight.value = -1;
       const center = {
         x: translateX.value + SIZE / 2,
         y: translateY.value + SIZE / 2,
       };
-      //@ts-ignore
-      const startingSquare = getSquare(ctx.startX, ctx.startY);
+      const startingSquare = getSquare(
+        //@ts-ignore
+        ctx.startX,
+        ctx.startY,
+        isBoardFlipped
+      );
       const startingSquareName = getSquareName(startingSquare);
-      const square = getSquare(center.x, center.y);
+      const square = getSquare(center.x, center.y, isBoardFlipped);
       const squareName = getSquareName(square);
 
       if (!squareName || !startingSquareName) {
@@ -132,11 +146,10 @@ const ChessPiece = ({
         return;
       }
 
-      console.log('TF', startingSquareName, squareName);
       if (onPieceDrop(startingSquareName, squareName)) {
         // snap to new position
-        translateX.value = withSpring(getPosition(square).x);
-        translateY.value = withSpring(getPosition(square).y);
+        translateX.value = withSpring(getPosition(square, isBoardFlipped).x);
+        translateY.value = withSpring(getPosition(square, isBoardFlipped).y);
 
         isDragging.value = false;
         isHovered.value = false;
@@ -189,15 +202,27 @@ const ChessPiece = ({
   });
 
   return !isNaN(+value) ? (
-    isHovered ? (
-      <Animated.View key={board?.[row]?.[col]?.square} style={chessSquare} />
-    ) : (
-      <></>
-    )
+    <PanGestureHandler onGestureEvent={panGesture}>
+      <TouchableWithoutFeedback
+        onPress={() => {
+          const square = getSquare(position.x, position.y, isBoardFlipped);
+          const squareName = getSquareName(square);
+          onSquareClick(squareName);
+        }}
+      >
+        <Animated.View
+          key={board[row]?.[col]?.square}
+          style={{
+            ...chessSquare,
+            zIndex: 100,
+          }}
+        />
+      </TouchableWithoutFeedback>
+    </PanGestureHandler>
   ) : (
     <PanGestureHandler onGestureEvent={panGesture}>
       <Animated.Image
-        source={getImage(boardState?.[row]?.[col] ?? 'p')}
+        source={getImage(boardState[row]?.[col] ?? 'p')}
         style={chessPiece}
       />
     </PanGestureHandler>
@@ -215,6 +240,8 @@ type ChessSquareProps = {
   squareToHighlight: SharedValue<number>;
   trueIndex: number;
   onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
-  onSquareClick: (square: Square) => boolean;
+  onSquareClick: (square: Square | '') => void;
+  isDraggablePiece: (square: Square | '') => boolean;
   position: { x: number; y: number };
+  isBoardFlipped: boolean;
 };
