@@ -17,10 +17,11 @@ const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 const Chessboard = ({
   position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   onPieceDrop,
-  onSquareClick = () => {
+  onSquareClick = (_: Square) => {
     'worklet';
+    return true;
   },
-  isDraggablePiece = () => {
+  isDraggablePiece = (_: Square) => {
     'worklet';
     return true;
   },
@@ -75,7 +76,7 @@ const Chessboard = ({
                     index,
                     getPosition(index * COLUMN_LENGTH + idx, isBoardFlipped)
                   ).chessSquareOverlay,
-                  ...customSquareStyles.get(square.square),
+                  ...customSquareStyles?.get(square.square),
                 }}
               />
             </View>
@@ -131,8 +132,8 @@ const styles = (_: number, __: number, position: { x: number; y: number }) =>
 type ChessBoardProps = {
   position?: string;
   onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
-  onSquareClick: (square: Square | '') => void;
-  isDraggablePiece: (square: Square | '') => boolean;
+  onSquareClick: (square: Square) => boolean;
+  isDraggablePiece: (square: Square) => boolean;
   customDarkSquareStyle?: object;
   customLightSquareStyle?: object;
   customSquareStyles?: Map<string, object>;

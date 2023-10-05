@@ -45,7 +45,9 @@ const ChessPiece = ({
     const colIndex = square % COLUMN_LENGTH;
 
     if (rowIndex > 7 || colIndex > 7 || rowIndex < 0 || colIndex < 0) {
-      return '';
+      // should never happen
+      console.log('invalid square');
+      return '' as Square;
     }
 
     return (columns[colIndex as keyof typeof columns] +
@@ -240,8 +242,8 @@ type ChessSquareProps = {
   squareToHighlight: SharedValue<number>;
   trueIndex: number;
   onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
-  onSquareClick: (square: Square | '') => void;
-  isDraggablePiece: (square: Square | '') => boolean;
+  onSquareClick: (square: Square) => boolean;
+  isDraggablePiece: (square: Square) => boolean;
   position: { x: number; y: number };
   isBoardFlipped: boolean;
 };
