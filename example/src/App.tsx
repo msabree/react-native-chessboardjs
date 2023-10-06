@@ -1,12 +1,22 @@
 import * as React from 'react';
 
 import { StyleSheet, View } from 'react-native';
-import { Chessboard } from 'react-native-chessboardjs';
+import Chessboard from 'react-native-chessboardjs';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <Chessboard />
+      <Chessboard
+        onPieceDrop={() => {
+          return true;
+        }}
+        onSquareClick={() => {
+          return true;
+        }}
+        isDraggablePiece={() => {
+          return true;
+        }}
+      />
     </View>
   );
 }
