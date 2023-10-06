@@ -10,6 +10,7 @@ import Animated, {
   useAnimatedReaction,
   type SharedValue,
   cancelAnimation,
+  runOnJS,
 } from 'react-native-reanimated';
 import type { FenPosition, Square } from '../../@types';
 import { COLUMN_LENGTH, MARGIN, columns, rows } from '../../constants';
@@ -31,6 +32,8 @@ const ChessPiece = ({
   position,
   isBoardFlipped,
 }: ChessSquareProps) => {
+  const _isDraggablePiece = useSharedValue(false);
+  const _canDropPiece = useSharedValue(false);
   const translateX = useSharedValue(position.x);
   const translateY = useSharedValue(position.y);
 
@@ -68,6 +71,17 @@ const ChessPiece = ({
     }
   );
 
+  const isDraggablePieceWrapper = (squareName: Square) => {
+    _isDraggablePiece.value = isDraggablePiece(squareName);
+  };
+
+  const onPieceDropWrapper = (
+    startingSquareName: Square,
+    squareName: Square
+  ) => {
+    _canDropPiece.value = onPieceDrop(startingSquareName, squareName);
+  };
+
   const panGesture = useAnimatedGestureHandler({
     onStart: (_event, ctx) => {
       const center = {
@@ -76,9 +90,10 @@ const ChessPiece = ({
       };
       const square = getSquare(center.x, center.y, isBoardFlipped);
       const squareName = getSquareName(square);
-      onSquareClick(squareName);
+      runOnJS(onSquareClick)(squareName);
+      runOnJS(isDraggablePieceWrapper)(squareName);
 
-      if (isDraggablePiece(squareName) === false) {
+      if (_isDraggablePiece.value === false) {
         cancelAnimation(translateX);
         cancelAnimation(translateY);
       } else {
@@ -100,11 +115,9 @@ const ChessPiece = ({
         isBoardFlipped
       );
       const startingSquareName = getSquareName(startingSquare);
+      runOnJS(isDraggablePieceWrapper)(startingSquareName);
 
-      if (
-        !startingSquareName ||
-        isDraggablePiece(startingSquareName) === false
-      ) {
+      if (!startingSquareName || _isDraggablePiece.value === false) {
         cancelAnimation(translateX);
         cancelAnimation(translateY);
       } else {
@@ -140,7 +153,9 @@ const ChessPiece = ({
         return;
       }
 
-      if (onPieceDrop(startingSquareName, squareName)) {
+      runOnJS(onPieceDropWrapper)(startingSquareName, squareName);
+
+      if (_canDropPiece.value === true) {
         // snap to new position
         translateX.value = withSpring(getPosition(square, isBoardFlipped).x);
         translateY.value = withSpring(getPosition(square, isBoardFlipped).y);
