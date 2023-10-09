@@ -35,29 +35,36 @@ const Chessboard = ({
   boardOrientation = 'white',
 }: ChessBoardProps) => {
   const isBoardFlipped = boardOrientation === 'black';
-  const board: { square: string }[][] = [];
-  for (let i = 0; i < COLUMN_LENGTH; i++) {
-    const rows = [];
-    for (let j = 0; j < ROW_LENGTH; j++) {
-      rows.push({ square: `${COLUMN_LABELS[j]}${8 - i}` });
+  const drawBoard = () => {
+    const board: { square: string }[][] = [];
+    for (let i = 0; i < COLUMN_LENGTH; i++) {
+      const rows = [];
+      for (let j = 0; j < ROW_LENGTH; j++) {
+        rows.push({ square: `${COLUMN_LABELS[j]}${8 - i}` });
+      }
+      board.push(rows);
     }
-    board.push(rows);
-  }
-
-  const [boardState, setBoardState] = useState<FenPosition[][]>(
+    return board;
+  };
+  const [boardUnderlay, setBoardUnderlay] = useState<{ square: string }[][]>(
+    drawBoard()
+  );
+  const [boardOverlay, setBoardOverlay] = useState<FenPosition[][]>(
     fenTo2dArray(position)
   );
 
   const squareToHighlight = useSharedValue<number>(-1);
+  const customSquareStylesString = JSON.stringify(customSquareStyles);
 
   useEffect(() => {
-    setBoardState(fenTo2dArray(position));
-  }, [position]);
+    setBoardOverlay(fenTo2dArray(position));
+    setBoardUnderlay(drawBoard());
+  }, [position, isBoardFlipped, customSquareStylesString]);
 
   return (
     <GestureHandlerRootView>
       {/* Underlay of chessboard */}
-      {board.map((row, index) =>
+      {boardUnderlay.map((row, index) =>
         row.map((square, idx) => {
           const chessPiecePosition = getPosition(
             index * COLUMN_LENGTH + idx,
@@ -65,7 +72,7 @@ const Chessboard = ({
           );
           return (
             <View
-              key={square.square}
+              key={`${square.square}${isBoardFlipped}`}
               style={{
                 ...((idx + index) % 2 === 0
                   ? customLightSquareStyle
@@ -88,12 +95,12 @@ const Chessboard = ({
         })
       )}
       {/* Overlay of chess pieces */}
-      {boardState.map((row, index) =>
+      {boardOverlay.map((row, index) =>
         row.map((square, idx) => (
           <ChessPiece
-            key={`${square}${index}${idx}`}
-            board={board}
-            boardState={boardState}
+            key={`${square}${index}${idx}${isBoardFlipped}`}
+            board={boardUnderlay}
+            boardState={boardOverlay}
             row={index}
             col={idx}
             squareToHighlight={squareToHighlight}
