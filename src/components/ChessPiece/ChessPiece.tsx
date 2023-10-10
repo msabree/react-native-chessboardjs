@@ -90,6 +90,7 @@ const ChessPiece = ({
       };
       const square = getSquare(center.x, center.y, isBoardFlipped);
       const squareName = getSquareName(square);
+
       runOnJS(onSquareClick)(squareName);
       runOnJS(isDraggablePieceWrapper)(squareName);
 
@@ -115,9 +116,8 @@ const ChessPiece = ({
         isBoardFlipped
       );
       const startingSquareName = getSquareName(startingSquare);
-      runOnJS(isDraggablePieceWrapper)(startingSquareName);
 
-      if (!startingSquareName || _isDraggablePiece.value === false) {
+      if (!startingSquareName) {
         cancelAnimation(translateX);
         cancelAnimation(translateY);
       } else {
@@ -178,14 +178,16 @@ const ChessPiece = ({
   const chessPiece = useAnimatedStyle(() => {
     const zIndex = isDragging.value ? 100 : 2;
     const scale = isDragging.value ? 1.2 : 1;
-    const backgroundColor = isHovered.value ? 'green' : 'transparent';
+    const borderColor = isHovered.value ? 'white' : 'transparent';
+    const borderWidth = isHovered.value ? 2 : 1;
 
     return {
       position: 'absolute',
       width: SIZE,
       height: SIZE,
       zIndex: zIndex,
-      backgroundColor,
+      borderColor,
+      borderWidth,
       transform: [
         { translateX: translateX.value },
         { translateY: translateY.value },
@@ -194,17 +196,15 @@ const ChessPiece = ({
     };
   });
   const chessSquare = useAnimatedStyle(() => {
-    // const borderColor = isDragging.value ? 'red' : 'black';
-    const backgroundColor = isHovered.value ? 'green' : 'transparent';
+    const borderColor = isHovered.value ? 'white' : 'transparent';
+    const borderWidth = isHovered.value ? 2 : 1;
 
     return {
       position: 'absolute',
-      // margin: MARGIN * 2,
-      // borderWidth: 1,
-      // borderColor,
       width: SIZE,
       height: SIZE,
-      backgroundColor,
+      borderWidth,
+      borderColor,
       transform: [{ translateX: position.x }, { translateY: position.y }],
       zIndex: 1,
     };
