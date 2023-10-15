@@ -121,7 +121,7 @@ const Chessboard = ({
 export default Chessboard;
 
 const styles = (_: number, __: number, position: { x: number; y: number }) =>
-  StyleSheet.create({
+  StyleSheet?.create?.({
     chessSquare: {
       position: 'absolute',
       width: SIZE,
