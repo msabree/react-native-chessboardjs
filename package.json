@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "example": "yarn workspace react-native-chessboardjs-example",
-    "test": "jest",
+    "test": "jest --coverage  ",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli lib",
