@@ -77,7 +77,7 @@ const Chessboard = ({
                 ...((idx + index) % 2 === 0
                   ? customLightSquareStyle
                   : customDarkSquareStyle),
-                ...styles(idx, index, chessPiecePosition).chessSquare,
+                ...styles(idx, index, chessPiecePosition)?.chessSquare,
               }}
             >
               <View
@@ -86,7 +86,7 @@ const Chessboard = ({
                     idx,
                     index,
                     getPosition(index * COLUMN_LENGTH + idx, isBoardFlipped)
-                  ).chessSquareOverlay,
+                  )?.chessSquareOverlay,
                   ...customSquareStyles[square.square],
                 }}
               />
