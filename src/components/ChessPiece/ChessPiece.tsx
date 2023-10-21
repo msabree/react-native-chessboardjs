@@ -12,7 +12,7 @@ import Animated, {
   cancelAnimation,
   runOnJS,
 } from 'react-native-reanimated';
-import type { FenPosition, Square } from '../../@types';
+import type { FenPosition, Piece, Square } from '../../@types';
 import { COLUMN_LENGTH, MARGIN, columns, rows } from '../../constants';
 import { getPosition, getSquare, getImage } from '../../utils';
 
@@ -24,9 +24,11 @@ const ChessPiece = ({
   row,
   col,
   squareToHighlight,
+  setModalVisible,
   value,
   trueIndex,
   onPieceDrop,
+  onPromotionCheck,
   onSquareClick,
   isDraggablePiece,
   position,
@@ -164,6 +166,15 @@ const ChessPiece = ({
         isHovered.value = false;
 
         trueIndex = square;
+        if (
+          onPromotionCheck(
+            startingSquareName,
+            squareName,
+            'q' as unknown as Piece
+          )
+        ) {
+          runOnJS(setModalVisible)(true);
+        }
       } else {
         // spring back to starting position
         translateX.value = withSpring(position.x);
@@ -247,8 +258,14 @@ type ChessSquareProps = {
   col: number;
   value: string;
   squareToHighlight: SharedValue<number>;
+  setModalVisible: (visible: boolean) => void;
   trueIndex: number;
   onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
+  onPromotionCheck: (
+    sourceSquare: Square,
+    targetSquare: Square,
+    piece: Piece
+  ) => boolean;
   onSquareClick: (square: Square) => boolean;
   isDraggablePiece: (square: Square) => boolean;
   position: { x: number; y: number };

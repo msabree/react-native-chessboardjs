@@ -1,15 +1,23 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useState } from 'react';
 import { useSharedValue } from 'react-native-reanimated';
 import ChessPiece from '../ChessPiece/ChessPiece';
-import type { FenPosition, Square } from '../../@types';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import type { FenPosition, Piece, Square } from '../../@types';
+import {
+  Dimensions,
+  Image,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   COLUMN_LABELS,
   COLUMN_LENGTH,
   MARGIN,
   ROW_LENGTH,
 } from '../../constants';
-import { fenTo2dArray, getPosition } from '../../utils';
+import { fenTo2dArray, getImage, getPosition } from '../../utils';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 interface StylesMap {
@@ -21,6 +29,7 @@ const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 const Chessboard = ({
   position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   onPieceDrop,
+  onPromotionCheck,
   onSquareClick = (_: Square) => {
     'worklet';
     return true;
@@ -52,6 +61,7 @@ const Chessboard = ({
   const [boardOverlay, setBoardOverlay] = useState<FenPosition[][]>(
     fenTo2dArray(position)
   );
+  const [isModalVisible, setModalVisible] = useState(false);
 
   const squareToHighlight = useSharedValue<number>(-1);
   const customSquareStylesString = JSON.stringify(customSquareStyles);
@@ -104,9 +114,11 @@ const Chessboard = ({
             row={index}
             col={idx}
             squareToHighlight={squareToHighlight}
+            setModalVisible={setModalVisible}
             value={square}
             trueIndex={index * COLUMN_LENGTH + idx}
             onPieceDrop={onPieceDrop}
+            onPromotionCheck={onPromotionCheck}
             onSquareClick={onSquareClick}
             isDraggablePiece={isDraggablePiece}
             position={getPosition(index * COLUMN_LENGTH + idx, isBoardFlipped)}
@@ -114,6 +126,73 @@ const Chessboard = ({
           />
         ))
       )}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        // onRequestClose={() => {
+        //   setModalVisible(false);
+        // }}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 22,
+          }}
+        >
+          <View
+            style={{
+              margin: 20,
+              backgroundColor: 'white',
+              borderRadius: 20,
+              padding: 35,
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 5,
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => {
+                'worklet';
+                setModalVisible(false);
+              }}
+            >
+              <Image source={getImage('q')} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+              }}
+            >
+              <Image source={getImage('r')} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+              }}
+            >
+              <Image source={getImage('b')} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+              }}
+            >
+              <Image source={getImage('n')} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </GestureHandlerRootView>
   );
 };
@@ -143,6 +222,11 @@ const styles = (_: number, __: number, position: { x: number; y: number }) =>
 type ChessBoardProps = {
   position?: string;
   onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
+  onPromotionCheck: (
+    sourceSquare: Square,
+    targetSquare: Square,
+    piece: Piece
+  ) => boolean;
   onSquareClick: (square: Square) => boolean;
   isDraggablePiece: (square: Square) => boolean;
   customDarkSquareStyle?: object;
