@@ -8,7 +8,7 @@ import Animated, {
   useSharedValue,
   useAnimatedGestureHandler,
   useAnimatedReaction,
-  type SharedValue,
+  SharedValue,
   cancelAnimation,
   runOnJS,
 } from 'react-native-reanimated';

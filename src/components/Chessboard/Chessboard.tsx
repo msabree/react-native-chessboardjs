@@ -29,7 +29,7 @@ const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 const Chessboard = ({
   position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   onPieceDrop,
-  onPromotionCheck,
+  onPromotionCheck = () => false,
   onSquareClick = (_: Square) => {
     'worklet';
     return true;
@@ -222,7 +222,7 @@ const styles = (_: number, __: number, position: { x: number; y: number }) =>
 type ChessBoardProps = {
   position?: string;
   onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
-  onPromotionCheck: (
+  onPromotionCheck?: (
     sourceSquare: Square,
     targetSquare: Square,
     piece: Piece
