@@ -8,7 +8,7 @@ import Animated, {
   useSharedValue,
   useAnimatedGestureHandler,
   useAnimatedReaction,
-  SharedValue,
+  type SharedValue,
   cancelAnimation,
   runOnJS,
 } from 'react-native-reanimated';
@@ -36,6 +36,7 @@ const ChessPiece = ({
 }: ChessSquareProps) => {
   const _isDraggablePiece = useSharedValue(false);
   const _canDropPiece = useSharedValue(false);
+  const _showPromotionModal = useSharedValue(false);
   const translateX = useSharedValue(position.x);
   const translateY = useSharedValue(position.y);
 
@@ -82,6 +83,18 @@ const ChessPiece = ({
     squareName: Square
   ) => {
     _canDropPiece.value = onPieceDrop(startingSquareName, squareName);
+  };
+
+  const onPromotionCheckWrapper = (
+    startingSquareName: Square,
+    squareName: Square,
+    piece: Piece
+  ) => {
+    _showPromotionModal.value = onPromotionCheck(
+      startingSquareName,
+      squareName,
+      piece
+    );
   };
 
   const panGesture = useAnimatedGestureHandler({
@@ -166,13 +179,12 @@ const ChessPiece = ({
         isHovered.value = false;
 
         trueIndex = square;
-        if (
-          onPromotionCheck(
-            startingSquareName,
-            squareName,
-            'q' as unknown as Piece
-          )
-        ) {
+        runOnJS(onPromotionCheckWrapper)(
+          startingSquareName,
+          squareName,
+          'q' as unknown as Piece
+        );
+        if (_showPromotionModal.value === true) {
           runOnJS(setModalVisible)(true);
         }
       } else {

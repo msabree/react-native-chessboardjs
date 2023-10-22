@@ -29,13 +29,13 @@ const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 const Chessboard = ({
   position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   onPieceDrop,
-  onPromotionCheck = () => false,
+  onPromotionCheck = () => {
+    return false;
+  },
   onSquareClick = (_: Square) => {
-    'worklet';
     return true;
   },
   isDraggablePiece = (_: Square) => {
-    'worklet';
     return true;
   },
   customDarkSquareStyle = { backgroundColor: 'black' },
