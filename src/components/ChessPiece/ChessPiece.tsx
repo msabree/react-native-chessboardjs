@@ -8,10 +8,10 @@ import Animated, {
   useSharedValue,
   useAnimatedGestureHandler,
   useAnimatedReaction,
-  type SharedValue,
   cancelAnimation,
   runOnJS,
 } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 import type { FenPosition, Piece, Square } from '../../@types';
 import { COLUMN_LENGTH, MARGIN, columns, rows } from '../../constants';
 import { getPosition, getSquare, getImage } from '../../utils';
