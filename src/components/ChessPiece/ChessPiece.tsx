@@ -35,8 +35,7 @@ const ChessPiece = ({
   isBoardFlipped,
 }: ChessSquareProps) => {
   const _isDraggablePiece = useSharedValue(false);
-  const _canDropPiece = useSharedValue(false);
-  const _showPromotionModal = useSharedValue(false);
+  const _canDropPiece = useSharedValue(true); // FIX ME!!!! Drags invalid pieces
   const translateX = useSharedValue(position.x);
   const translateY = useSharedValue(position.y);
 
@@ -80,123 +79,113 @@ const ChessPiece = ({
 
   const onPieceDropWrapper = (
     startingSquareName: Square,
-    squareName: Square
-  ) => {
-    _canDropPiece.value = onPieceDrop(startingSquareName, squareName);
-  };
-
-  const onPromotionCheckWrapper = (
-    startingSquareName: Square,
     squareName: Square,
     piece: Piece
   ) => {
-    _showPromotionModal.value = onPromotionCheck(
-      startingSquareName,
-      squareName,
-      piece
-    );
+    const canDrop = onPieceDrop(startingSquareName, squareName);
+    if (canDrop) {
+      const showModal = onPromotionCheck(startingSquareName, squareName, piece);
+      if (showModal) {
+        setModalVisible(true);
+      }
+    }
+    _canDropPiece.value = canDrop;
   };
 
-  const panGesture = useAnimatedGestureHandler({
-    onStart: (_event, ctx) => {
-      const center = {
-        x: translateX.value + SIZE / 2,
-        y: translateY.value + SIZE / 2,
-      };
-      const square = getSquare(center.x, center.y, isBoardFlipped);
-      const squareName = getSquareName(square);
+  const panGesture = useAnimatedGestureHandler(
+    {
+      onStart: (_event, ctx) => {
+        const center = {
+          x: translateX.value + SIZE / 2,
+          y: translateY.value + SIZE / 2,
+        };
+        const square = getSquare(center.x, center.y, isBoardFlipped);
+        const squareName = getSquareName(square);
 
-      runOnJS(onSquareClick)(squareName);
-      runOnJS(isDraggablePieceWrapper)(squareName);
+        runOnJS(onSquareClick)(squareName);
+        runOnJS(isDraggablePieceWrapper)(squareName);
 
-      if (_isDraggablePiece.value === false) {
-        cancelAnimation(translateX);
-        cancelAnimation(translateY);
-      } else {
         ctx.startX = translateX.value;
         ctx.startY = translateY.value;
         isDragging.value = true;
-      }
-    },
-    onActive: (event, ctx) => {
-      const center = {
-        x: translateX.value + SIZE / 2,
-        y: translateY.value + SIZE / 2,
-      };
-      const square = getSquare(center.x, center.y, isBoardFlipped);
-      const startingSquare = getSquare(
-        //@ts-ignore
-        ctx.startX,
-        ctx.startY,
-        isBoardFlipped
-      );
-      const startingSquareName = getSquareName(startingSquare);
+      },
+      onActive: (event, ctx) => {
+        const center = {
+          x: translateX.value + SIZE / 2,
+          y: translateY.value + SIZE / 2,
+        };
+        const square = getSquare(center.x, center.y, isBoardFlipped);
+        const startingSquare = getSquare(
+          //@ts-ignore
+          ctx.startX,
+          ctx.startY,
+          isBoardFlipped
+        );
+        const startingSquareName = getSquareName(startingSquare);
 
-      if (!startingSquareName) {
-        cancelAnimation(translateX);
-        cancelAnimation(translateY);
-      } else {
-        translateX.value = ctx.startX + event.translationX;
-        translateY.value = ctx.startY + event.translationY;
+        if (_isDraggablePiece.value === false || !startingSquareName) {
+          cancelAnimation(translateX);
+          cancelAnimation(translateY);
+        } else {
+          translateX.value = ctx.startX + event.translationX;
+          translateY.value = ctx.startY + event.translationY;
 
-        squareToHighlight.value = square;
-      }
-    },
-    onFinish: (_, ctx) => {
-      squareToHighlight.value = -1;
-      const center = {
-        x: translateX.value + SIZE / 2,
-        y: translateY.value + SIZE / 2,
-      };
-      const startingSquare = getSquare(
-        //@ts-ignore
-        ctx.startX,
-        ctx.startY,
-        isBoardFlipped
-      );
-      const startingSquareName = getSquareName(startingSquare);
-      const square = getSquare(center.x, center.y, isBoardFlipped);
-      const squareName = getSquareName(square);
+          squareToHighlight.value = square;
+        }
+      },
+      onFinish: (_, ctx) => {
+        squareToHighlight.value = -1;
+        const center = {
+          x: translateX.value + SIZE / 2,
+          y: translateY.value + SIZE / 2,
+        };
+        const startingSquare = getSquare(
+          //@ts-ignore
+          ctx.startX,
+          ctx.startY,
+          isBoardFlipped
+        );
+        const startingSquareName = getSquareName(startingSquare);
+        const square = getSquare(center.x, center.y, isBoardFlipped);
+        const squareName = getSquareName(square);
 
-      if (!squareName || !startingSquareName) {
-        // spring back to starting position
-        translateX.value = withSpring(position.x);
-        translateY.value = withSpring(position.y);
+        if (!squareName || !startingSquareName) {
+          // spring back to starting position
+          translateX.value = withSpring(position.x);
+          translateY.value = withSpring(position.y);
 
-        isDragging.value = false;
-        isHovered.value = false;
-        return;
-      }
+          isDragging.value = false;
+          isHovered.value = false;
+          return;
+        }
 
-      runOnJS(onPieceDropWrapper)(startingSquareName, squareName);
-
-      if (_canDropPiece.value === true) {
-        // snap to new position
-        translateX.value = withSpring(getPosition(square, isBoardFlipped).x);
-        translateY.value = withSpring(getPosition(square, isBoardFlipped).y);
-
-        isDragging.value = false;
-        isHovered.value = false;
-
-        trueIndex = square;
-        runOnJS(onPromotionCheckWrapper)(
+        runOnJS(onPieceDropWrapper)(
           startingSquareName,
           squareName,
           'q' as unknown as Piece
         );
-        if (_showPromotionModal.value === true) {
-          runOnJS(setModalVisible)(true);
-        }
-      } else {
-        // spring back to starting position
-        translateX.value = withSpring(position.x);
-        translateY.value = withSpring(position.y);
 
-        isDragging.value = false;
-        isHovered.value = false;
-      }
+        if (_canDropPiece.value === true) {
+          // snap to new position
+          translateX.value = withSpring(getPosition(square, isBoardFlipped).x);
+          translateY.value = withSpring(getPosition(square, isBoardFlipped).y);
+
+          isDragging.value = false;
+          isHovered.value = false;
+
+          trueIndex = square;
+        } else {
+          // spring back to starting position
+          translateX.value = withSpring(position.x);
+          translateY.value = withSpring(position.y);
+
+          isDragging.value = false;
+          isHovered.value = false;
+        }
+      },
     },
-  });
+    [_isDraggablePiece.value, _canDropPiece.value]
+  );
 
   const chessPiece = useAnimatedStyle(() => {
     const zIndex = isDragging.value ? 100 : 2;
