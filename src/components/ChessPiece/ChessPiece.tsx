@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, TouchableWithoutFeedback } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -32,7 +32,13 @@ const ChessPiece = ({
   isDraggablePiece,
   position,
   isBoardFlipped,
+  pieceSelected,
 }: ChessSquareProps) => {
+  // promotion cache
+  const [_color, setColor] = useState('');
+  const [_sourceSquare, setSourceSquare] = useState('' as Square);
+  const [_targetSquare, setTargetSquare] = useState('' as Square);
+
   const _isDraggablePiece = useSharedValue(false);
   const _canDropPiece = useSharedValue(false);
   const translateX = useSharedValue(position.x);
@@ -92,17 +98,41 @@ const ChessPiece = ({
   const onPieceDropWrapper = (
     startingSquareName: Square,
     squareName: Square,
-    piece: Piece
+    piece: Piece,
+    isPromotionSelection: boolean
   ) => {
-    const canDrop = onPieceDrop(startingSquareName, squareName);
-    if (canDrop) {
+    if (isPromotionSelection) {
+      _canDropPiece.value = onPieceDrop(startingSquareName, squareName, piece);
+    } else {
+      // check if promotion is needed first!
+      // once you drop the promoted piece needs to be selected!
       const showModal = onPromotionCheck(startingSquareName, squareName, piece);
       if (showModal) {
         setModalVisible(true);
+
+        // cache promotion info to resuse after modal selection closes
+        setColor(piece[0] ?? 'w');
+        setSourceSquare(startingSquareName);
+        setTargetSquare(squareName);
+      } else {
+        setModalVisible(false);
+        // ensure piece is undefined if not promoted
+        _canDropPiece.value = onPieceDrop(startingSquareName, squareName);
       }
     }
-    _canDropPiece.value = canDrop;
   };
+
+  useEffect(() => {
+    if (_sourceSquare && _targetSquare && _color && pieceSelected) {
+      runOnJS(onPieceDropWrapper)(
+        _sourceSquare,
+        _targetSquare,
+        `${_color}${pieceSelected}` as Piece,
+        true
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pieceSelected]);
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
@@ -172,7 +202,7 @@ const ChessPiece = ({
 
       const piece = getPiece(boardState[row]?.[col] ?? 'p');
 
-      runOnJS(onPieceDropWrapper)(startingSquareName, squareName, piece);
+      runOnJS(onPieceDropWrapper)(startingSquareName, squareName, piece, false);
 
       _canDropPiece.addListener(position.x + position.y, (_value) => {
         if (_value === true) {
@@ -268,8 +298,13 @@ type ChessSquareProps = {
   value: string;
   squareToHighlight: SharedValue<number>;
   setModalVisible: (visible: boolean) => void;
+  pieceSelected: 'q' | 'r' | 'n' | 'b';
   trueIndex: number;
-  onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
+  onPieceDrop: (
+    sourceSquare: Square,
+    targetSquare: Square,
+    piece?: Piece
+  ) => boolean;
   onPromotionCheck: (
     sourceSquare: Square,
     targetSquare: Square,

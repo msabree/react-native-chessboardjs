@@ -61,6 +61,7 @@ const Chessboard = ({
     fenTo2dArray(position)
   );
   const [isModalVisible, setModalVisible] = useState(false);
+  const [pieceSelected, setPieceSelected] = useState('');
 
   const squareToHighlight = useSharedValue<number>(-1);
   const customSquareStylesString = JSON.stringify(customSquareStyles);
@@ -114,6 +115,7 @@ const Chessboard = ({
             col={idx}
             squareToHighlight={squareToHighlight}
             setModalVisible={setModalVisible}
+            pieceSelected={pieceSelected as 'q' | 'r' | 'n' | 'b'}
             value={square}
             trueIndex={index * COLUMN_LENGTH + idx}
             onPieceDrop={onPieceDrop}
@@ -136,8 +138,8 @@ const Chessboard = ({
         <View style={rootStyles.modalContainer}>
           <TouchableOpacity
             onPress={() => {
-              'worklet';
               setModalVisible(false);
+              setPieceSelected('q');
             }}
           >
             <Image style={rootStyles.pieceSelection} source={getImage('q')} />
@@ -145,6 +147,7 @@ const Chessboard = ({
           <TouchableOpacity
             onPress={() => {
               setModalVisible(false);
+              setPieceSelected('r');
             }}
           >
             <Image style={rootStyles.pieceSelection} source={getImage('r')} />
@@ -152,6 +155,7 @@ const Chessboard = ({
           <TouchableOpacity
             onPress={() => {
               setModalVisible(false);
+              setPieceSelected('b');
             }}
           >
             <Image style={rootStyles.pieceSelection} source={getImage('b')} />
@@ -159,6 +163,7 @@ const Chessboard = ({
           <TouchableOpacity
             onPress={() => {
               setModalVisible(false);
+              setPieceSelected('n');
             }}
           >
             <Image style={rootStyles.pieceSelection} source={getImage('n')} />
@@ -222,7 +227,11 @@ const styles = (_: number, __: number, position: { x: number; y: number }) =>
 
 type ChessBoardProps = {
   position?: string;
-  onPieceDrop: (sourceSquare: Square, targetSquare: Square) => boolean;
+  onPieceDrop: (
+    sourceSquare: Square,
+    targetSquare: Square,
+    piece?: Piece
+  ) => boolean;
   onPromotionCheck?: (
     sourceSquare: Square,
     targetSquare: Square,
