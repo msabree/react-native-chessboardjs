@@ -116,8 +116,11 @@ const ChessPiece = ({
         setTargetSquare(squareName);
       } else {
         setModalVisible(false);
-        // ensure piece is undefined if not promoted
-        _canDropPiece.value = onPieceDrop(startingSquareName, squareName);
+        _canDropPiece.value = onPieceDrop(
+          startingSquareName,
+          squareName,
+          piece
+        );
       }
     }
   };
