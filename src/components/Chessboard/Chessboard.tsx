@@ -31,10 +31,10 @@ const Chessboard = ({
   onPromotionCheck = () => {
     return false;
   },
-  onSquareClick = (_: Square) => {
+  onSquareClick = () => {
     return true;
   },
-  isDraggablePiece = (_: Square) => {
+  isDraggablePiece = () => {
     return true;
   },
   customDarkSquareStyle = { backgroundColor: 'black' },
@@ -171,33 +171,34 @@ const Chessboard = ({
 
 export default Chessboard;
 
-const rootStyles = StyleSheet.create({
-  modalContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: 250,
-    width: 75,
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    marginTop: 30,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const rootStyles =
+  StyleSheet?.create?.({
+    modalContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      height: 250,
+      width: 75,
+      marginLeft: 'auto',
+      marginRight: 'auto',
+      marginTop: 30,
+      backgroundColor: 'white',
+      borderRadius: 20,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  pieceSelection: {
-    height: 50,
-    width: 50,
-    resizeMode: 'contain',
-  },
-});
+    pieceSelection: {
+      height: 50,
+      width: 50,
+      resizeMode: 'contain',
+    },
+  }) ?? {};
 
 const styles = (_: number, __: number, position: { x: number; y: number }) =>
   StyleSheet?.create?.({
@@ -228,7 +229,7 @@ type ChessBoardProps = {
     piece: Piece
   ) => boolean;
   onSquareClick: (square: Square) => boolean;
-  isDraggablePiece: (square: Square) => boolean;
+  isDraggablePiece: ({ piece }: { piece: Piece }) => boolean;
   customDarkSquareStyle?: object;
   customLightSquareStyle?: object;
   customSquareStyles?: StylesMap;

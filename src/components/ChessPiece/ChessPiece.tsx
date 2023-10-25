@@ -50,7 +50,7 @@ const ChessPiece = ({
     'worklet';
     return `${
       isLowerCase(fenCharacter) ? 'b' : 'w'
-    }${fenCharacter.toLowerCase()}`;
+    }${fenCharacter.toLowerCase()}` as Piece;
   };
 
   const getSquareName = (square: number) => {
@@ -84,9 +84,9 @@ const ChessPiece = ({
     }
   );
 
-  const onStartCallbackWrapper = (squareName: Square) => {
+  const onStartCallbackWrapper = (squareName: Square, piece: Piece) => {
     onSquareClick(squareName);
-    _isDraggablePiece.value = isDraggablePiece(squareName);
+    _isDraggablePiece.value = isDraggablePiece({ piece });
   };
 
   const onPieceDropWrapper = (
@@ -115,10 +115,9 @@ const ChessPiece = ({
       };
       const square = getSquare(center.x, center.y, isBoardFlipped);
       const squareName = getSquareName(square);
+      const piece = getPiece(boardState[row]?.[col] ?? 'p');
 
-      console.log(squareName);
-
-      runOnJS(onStartCallbackWrapper)(squareName);
+      runOnJS(onStartCallbackWrapper)(squareName, piece);
       isDragging.value = true;
     })
     .onChange((event) => {
@@ -173,11 +172,7 @@ const ChessPiece = ({
 
       const piece = getPiece(boardState[row]?.[col] ?? 'p');
 
-      runOnJS(onPieceDropWrapper)(
-        startingSquareName,
-        squareName,
-        piece as Piece
-      );
+      runOnJS(onPieceDropWrapper)(startingSquareName, squareName, piece);
 
       _canDropPiece.addListener(position.x + position.y, (_value) => {
         if (_value === true) {
@@ -281,7 +276,7 @@ type ChessSquareProps = {
     piece: Piece
   ) => boolean;
   onSquareClick: (square: Square) => boolean;
-  isDraggablePiece: (square: Square) => boolean;
+  isDraggablePiece: ({ piece }: { piece: Piece }) => boolean;
   position: { x: number; y: number };
   isBoardFlipped: boolean;
 };
