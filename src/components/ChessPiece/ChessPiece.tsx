@@ -98,40 +98,30 @@ const ChessPiece = ({
   const onPieceDropWrapper = (
     startingSquareName: Square,
     squareName: Square,
-    piece: Piece,
-    isPromotionSelection: boolean
+    piece: Piece
   ) => {
-    if (isPromotionSelection) {
-      _canDropPiece.value = onPieceDrop(startingSquareName, squareName, piece);
+    // check if promotion is needed first!
+    // once you drop the promoted piece needs to be selected!
+    const showModal = onPromotionCheck(startingSquareName, squareName, piece);
+    if (showModal) {
+      setModalVisible(true);
+      // cache promotion info to resuse after modal selection closes
+      setColor(piece[0] ?? 'w');
+      setSourceSquare(startingSquareName);
+      setTargetSquare(squareName);
     } else {
-      // check if promotion is needed first!
-      // once you drop the promoted piece needs to be selected!
-      const showModal = onPromotionCheck(startingSquareName, squareName, piece);
-      if (showModal) {
-        setModalVisible(true);
-
-        // cache promotion info to resuse after modal selection closes
-        setColor(piece[0] ?? 'w');
-        setSourceSquare(startingSquareName);
-        setTargetSquare(squareName);
-      } else {
-        setModalVisible(false);
-        _canDropPiece.value = onPieceDrop(
-          startingSquareName,
-          squareName,
-          piece
-        );
-      }
+      setModalVisible(false);
+      _canDropPiece.value = onPieceDrop(startingSquareName, squareName, piece);
     }
   };
 
   useEffect(() => {
     if (_sourceSquare && _targetSquare && _color && pieceSelected) {
-      runOnJS(onPieceDropWrapper)(
+      // we're off the animation thread, so no need to runOnJS
+      onPieceDrop(
         _sourceSquare,
         _targetSquare,
-        `${_color}${pieceSelected}` as Piece,
-        true
+        `${_color}${pieceSelected}` as Piece
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,7 +195,7 @@ const ChessPiece = ({
 
       const piece = getPiece(boardState[row]?.[col] ?? 'p');
 
-      runOnJS(onPieceDropWrapper)(startingSquareName, squareName, piece, false);
+      runOnJS(onPieceDropWrapper)(startingSquareName, squareName, piece);
 
       _canDropPiece.addListener(position.x + position.y, (_value) => {
         if (_value === true) {
