@@ -1,12 +1,11 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { Dimensions, TouchableWithoutFeedback } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   withSpring,
   useSharedValue,
-  useAnimatedGestureHandler,
   useAnimatedReaction,
   cancelAnimation,
   runOnJS,
@@ -35,12 +34,24 @@ const ChessPiece = ({
   isBoardFlipped,
 }: ChessSquareProps) => {
   const _isDraggablePiece = useSharedValue(false);
-  const _canDropPiece = useSharedValue(true); // FIX ME!!!! Drags invalid pieces
+  const _canDropPiece = useSharedValue(false);
   const translateX = useSharedValue(position.x);
   const translateY = useSharedValue(position.y);
 
   const isDragging = useSharedValue(false);
   const isHovered = useSharedValue(false);
+
+  const isLowerCase = (_value: string) => {
+    'worklet';
+    return _value === _value.toLowerCase();
+  };
+
+  const getPiece = (fenCharacter: string) => {
+    'worklet';
+    return `${
+      isLowerCase(fenCharacter) ? 'b' : 'w'
+    }${fenCharacter.toLowerCase()}`;
+  };
 
   const getSquareName = (square: number) => {
     'worklet';
@@ -73,7 +84,8 @@ const ChessPiece = ({
     }
   );
 
-  const isDraggablePieceWrapper = (squareName: Square) => {
+  const onStartCallbackWrapper = (squareName: Square) => {
+    onSquareClick(squareName);
     _isDraggablePiece.value = isDraggablePiece(squareName);
   };
 
@@ -92,80 +104,83 @@ const ChessPiece = ({
     _canDropPiece.value = canDrop;
   };
 
-  const panGesture = useAnimatedGestureHandler(
-    {
-      onStart: (_event, ctx) => {
-        const center = {
-          x: translateX.value + SIZE / 2,
-          y: translateY.value + SIZE / 2,
-        };
-        const square = getSquare(center.x, center.y, isBoardFlipped);
-        const squareName = getSquareName(square);
+  const panGesture = Gesture.Pan()
+    .onBegin(() => {
+      translateX.value = position.x;
+      translateY.value = position.y;
 
-        runOnJS(onSquareClick)(squareName);
-        runOnJS(isDraggablePieceWrapper)(squareName);
+      const center = {
+        x: translateX.value + SIZE / 2,
+        y: translateY.value + SIZE / 2,
+      };
+      const square = getSquare(center.x, center.y, isBoardFlipped);
+      const squareName = getSquareName(square);
 
-        ctx.startX = translateX.value;
-        ctx.startY = translateY.value;
-        isDragging.value = true;
-      },
-      onActive: (event, ctx) => {
-        const center = {
-          x: translateX.value + SIZE / 2,
-          y: translateY.value + SIZE / 2,
-        };
-        const square = getSquare(center.x, center.y, isBoardFlipped);
-        const startingSquare = getSquare(
-          //@ts-ignore
-          ctx.startX,
-          ctx.startY,
-          isBoardFlipped
-        );
-        const startingSquareName = getSquareName(startingSquare);
+      console.log(squareName);
 
-        if (_isDraggablePiece.value === false || !startingSquareName) {
-          cancelAnimation(translateX);
-          cancelAnimation(translateY);
-        } else {
-          translateX.value = ctx.startX + event.translationX;
-          translateY.value = ctx.startY + event.translationY;
+      runOnJS(onStartCallbackWrapper)(squareName);
+      isDragging.value = true;
+    })
+    .onChange((event) => {
+      if (_isDraggablePiece.value === false) {
+        cancelAnimation(translateX);
+        cancelAnimation(translateY);
+        return;
+      }
+      const center = {
+        x: translateX.value + SIZE / 2,
+        y: translateY.value + SIZE / 2,
+      };
+      const square = getSquare(center.x, center.y, isBoardFlipped);
+      const startingSquare = getSquare(position.x, position.y, isBoardFlipped);
+      const startingSquareName = getSquareName(startingSquare);
 
-          squareToHighlight.value = square;
-        }
-      },
-      onFinish: (_, ctx) => {
-        squareToHighlight.value = -1;
-        const center = {
-          x: translateX.value + SIZE / 2,
-          y: translateY.value + SIZE / 2,
-        };
-        const startingSquare = getSquare(
-          //@ts-ignore
-          ctx.startX,
-          ctx.startY,
-          isBoardFlipped
-        );
-        const startingSquareName = getSquareName(startingSquare);
-        const square = getSquare(center.x, center.y, isBoardFlipped);
-        const squareName = getSquareName(square);
+      if (!startingSquareName) {
+        cancelAnimation(translateX);
+        cancelAnimation(translateY);
+      } else {
+        translateX.value = event.absoluteX - 25; // not sure why
+        translateY.value = event.absoluteY - 75; // not sure why
+        squareToHighlight.value = square;
+      }
+    })
+    .onFinalize(() => {
+      translateX.value = withSpring(position.x);
+      translateY.value = withSpring(position.y);
+      squareToHighlight.value = -1;
+      const center = {
+        x: translateX.value + SIZE / 2,
+        y: translateY.value + SIZE / 2,
+      };
+      const startingSquare = getSquare(position.x, position.y, isBoardFlipped);
+      const startingSquareName = getSquareName(startingSquare);
+      const square = getSquare(center.x, center.y, isBoardFlipped);
+      const squareName = getSquareName(square);
 
-        if (!squareName || !startingSquareName) {
-          // spring back to starting position
-          translateX.value = withSpring(position.x);
-          translateY.value = withSpring(position.y);
+      if (
+        !squareName ||
+        !startingSquareName ||
+        startingSquareName === squareName
+      ) {
+        // spring back to starting position
+        translateX.value = withSpring(position.x);
+        translateY.value = withSpring(position.y);
 
-          isDragging.value = false;
-          isHovered.value = false;
-          return;
-        }
+        isDragging.value = false;
+        isHovered.value = false;
+        return;
+      }
 
-        runOnJS(onPieceDropWrapper)(
-          startingSquareName,
-          squareName,
-          'q' as unknown as Piece
-        );
+      const piece = getPiece(boardState[row]?.[col] ?? 'p');
 
-        if (_canDropPiece.value === true) {
+      runOnJS(onPieceDropWrapper)(
+        startingSquareName,
+        squareName,
+        piece as Piece
+      );
+
+      _canDropPiece.addListener(position.x + position.y, (_value) => {
+        if (_value === true) {
           // snap to new position
           translateX.value = withSpring(getPosition(square, isBoardFlipped).x);
           translateY.value = withSpring(getPosition(square, isBoardFlipped).y);
@@ -182,10 +197,8 @@ const ChessPiece = ({
           isDragging.value = false;
           isHovered.value = false;
         }
-      },
-    },
-    [_isDraggablePiece.value, _canDropPiece.value]
-  );
+      });
+    });
 
   const chessPiece = useAnimatedStyle(() => {
     const zIndex = isDragging.value ? 100 : 2;
@@ -223,7 +236,7 @@ const ChessPiece = ({
   });
 
   return !isNaN(+value) ? (
-    <PanGestureHandler onGestureEvent={panGesture}>
+    <GestureDetector gesture={panGesture}>
       <TouchableWithoutFeedback
         onPress={() => {
           const square = getSquare(position.x, position.y, isBoardFlipped);
@@ -239,14 +252,14 @@ const ChessPiece = ({
           }}
         />
       </TouchableWithoutFeedback>
-    </PanGestureHandler>
+    </GestureDetector>
   ) : (
-    <PanGestureHandler onGestureEvent={panGesture}>
+    <GestureDetector gesture={panGesture}>
       <Animated.Image
         source={getImage(boardState[row]?.[col] ?? 'p')}
         style={chessPiece}
       />
-    </PanGestureHandler>
+    </GestureDetector>
   );
 };
 
