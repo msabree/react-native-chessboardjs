@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useState } from 'react';
-import { Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { Dimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -91,8 +91,20 @@ const ChessPiece = ({
   );
 
   const onStartCallbackWrapper = (squareName: Square, piece: Piece) => {
-    onSquareClick(squareName);
-    _isDraggablePiece.value = isDraggablePiece({ piece });
+    // check if promotion is needed first!
+    // once you drop the promoted piece needs to be selected!
+    const showModal = onPromotionCheck('' as Square, squareName, piece);
+    if (showModal) {
+      setModalVisible(true);
+
+      // cache promotion info to resuse after modal selection closes
+      setColor(piece[0] ?? 'w');
+      setSourceSquare('' as Square); // <--- fix me
+      setTargetSquare(squareName);
+    } else {
+      onSquareClick(squareName);
+      _isDraggablePiece.value = isDraggablePiece({ piece });
+    }
   };
 
   const onPieceDropWrapper = (
@@ -105,6 +117,7 @@ const ChessPiece = ({
     const showModal = onPromotionCheck(startingSquareName, squareName, piece);
     if (showModal) {
       setModalVisible(true);
+
       // cache promotion info to resuse after modal selection closes
       setColor(piece[0] ?? 'w');
       setSourceSquare(startingSquareName);
@@ -138,6 +151,7 @@ const ChessPiece = ({
       };
       const square = getSquare(center.x, center.y, isBoardFlipped);
       const squareName = getSquareName(square);
+
       const piece = getPiece(boardState[row]?.[col] ?? 'p');
 
       runOnJS(onStartCallbackWrapper)(squareName, piece);
@@ -255,21 +269,13 @@ const ChessPiece = ({
 
   return !isNaN(+value) ? (
     <GestureDetector gesture={panGesture}>
-      <TouchableWithoutFeedback
-        onPress={() => {
-          const square = getSquare(position.x, position.y, isBoardFlipped);
-          const squareName = getSquareName(square);
-          onSquareClick(squareName);
+      <Animated.View
+        key={board[row]?.[col]?.square}
+        style={{
+          ...chessSquare,
+          zIndex: 100,
         }}
-      >
-        <Animated.View
-          key={board[row]?.[col]?.square}
-          style={{
-            ...chessSquare,
-            zIndex: 100,
-          }}
-        />
-      </TouchableWithoutFeedback>
+      />
     </GestureDetector>
   ) : (
     <GestureDetector gesture={panGesture}>
