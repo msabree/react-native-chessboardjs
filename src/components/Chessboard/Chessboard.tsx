@@ -116,6 +116,7 @@ const Chessboard = ({
             squareToHighlight={squareToHighlight}
             setModalVisible={setModalVisible}
             pieceSelected={pieceSelected as 'q' | 'r' | 'n' | 'b'}
+            setPieceSelected={setPieceSelected}
             value={square}
             trueIndex={index * COLUMN_LENGTH + idx}
             onPieceDrop={onPieceDrop}
@@ -230,7 +231,7 @@ type ChessBoardProps = {
   onPieceDrop: (
     sourceSquare: Square,
     targetSquare: Square,
-    piece?: Piece
+    piece: Piece
   ) => boolean;
   onPromotionCheck?: (
     sourceSquare: Square,

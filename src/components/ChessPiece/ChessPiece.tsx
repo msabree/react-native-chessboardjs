@@ -33,6 +33,7 @@ const ChessPiece = ({
   position,
   isBoardFlipped,
   pieceSelected,
+  setPieceSelected,
 }: ChessSquareProps) => {
   // promotion cache
   const [_color, setColor] = useState('');
@@ -136,6 +137,8 @@ const ChessPiece = ({
         _targetSquare,
         `${_color}${pieceSelected}` as Piece
       );
+
+      setPieceSelected('' as 'q' | 'r' | 'n' | 'b');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pieceSelected]);
@@ -298,11 +301,12 @@ type ChessSquareProps = {
   squareToHighlight: SharedValue<number>;
   setModalVisible: (visible: boolean) => void;
   pieceSelected: 'q' | 'r' | 'n' | 'b';
+  setPieceSelected: (piece: 'q' | 'r' | 'n' | 'b') => void;
   trueIndex: number;
   onPieceDrop: (
     sourceSquare: Square,
     targetSquare: Square,
-    piece?: Piece
+    piece: Piece
   ) => boolean;
   onPromotionCheck: (
     sourceSquare: Square,
