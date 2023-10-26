@@ -34,6 +34,7 @@ const ChessPiece = ({
   isBoardFlipped,
   pieceSelected,
   setPieceSelected,
+  lastClickedSquare,
 }: ChessSquareProps) => {
   // promotion cache
   const [_color, setColor] = useState('');
@@ -94,16 +95,24 @@ const ChessPiece = ({
   const onStartCallbackWrapper = (squareName: Square, piece: Piece) => {
     // check if promotion is needed first!
     // once you drop the promoted piece needs to be selected!
-    const showModal = onPromotionCheck('' as Square, squareName, piece);
+    const showModal = onPromotionCheck(
+      lastClickedSquare.current.squareName,
+      squareName,
+      lastClickedSquare.current.piece
+    );
     if (showModal) {
       setModalVisible(true);
 
       // cache promotion info to resuse after modal selection closes
       setColor(piece[0] ?? 'w');
-      setSourceSquare('' as Square); // <--- fix me
+      setSourceSquare(lastClickedSquare.current.squareName);
       setTargetSquare(squareName);
     } else {
       onSquareClick(squareName);
+      lastClickedSquare.current = {
+        piece,
+        squareName,
+      };
       _isDraggablePiece.value = isDraggablePiece({ piece });
     }
   };
@@ -317,4 +326,5 @@ type ChessSquareProps = {
   isDraggablePiece: ({ piece }: { piece: Piece }) => boolean;
   position: { x: number; y: number };
   isBoardFlipped: boolean;
+  lastClickedSquare: { current: { piece: Piece; squareName: Square } };
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSharedValue } from 'react-native-reanimated';
 import ChessPiece from '../ChessPiece/ChessPiece';
 import type { FenPosition, Piece, Square } from '../../@types';
@@ -66,6 +66,14 @@ const Chessboard = ({
   const squareToHighlight = useSharedValue<number>(-1);
   const customSquareStylesString = JSON.stringify(customSquareStyles);
 
+  const lastClickedSquare = useRef<{
+    piece: Piece;
+    squareName: Square;
+  }>({
+    piece: 'w8' as Piece,
+    squareName: 'a1' as Square,
+  });
+
   useEffect(() => {
     setBoardOverlay(fenTo2dArray(position));
     setBoardUnderlay(drawBoard());
@@ -125,6 +133,7 @@ const Chessboard = ({
             isDraggablePiece={isDraggablePiece}
             position={getPosition(index * COLUMN_LENGTH + idx, isBoardFlipped)}
             isBoardFlipped={isBoardFlipped}
+            lastClickedSquare={lastClickedSquare}
           />
         ))
       )}
