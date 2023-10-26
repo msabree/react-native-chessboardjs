@@ -1,6 +1,6 @@
 <div align="center" markdown="1">
 
-# [react-native-chessboardjs](https://react-chessboard.vercel.app/)
+# react-native-chessboardjs
 
 <img src="./media/iPhoneChessboard.png" alt="react chessboard" width="300">
 
