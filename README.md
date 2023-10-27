@@ -126,18 +126,25 @@ function App(): JSX.Element {
           isDraggablePiece={({piece}) => {
             return chessGame.turn() === piece[0];
           }}
-          onPromotionCheck={(_startingSquareName, targetSquare, piece) => {
-            // do nothing on opponent turn
-            if (chessGame.turn() !== piece[0]) {
-              return false;
-            }
-
-            const moveFromPiece = chessGame.get(moveFrom as Square);
+          // if a user makes an invalid move attempt they will still see the modal
+          // validating moves for promo check requires a bit more work than
+          // we show in this example. the if statement can be extended as needed
+          onPromotionCheck={(sourceSquare, targetSquare, piece) => {
             if (
-              (targetSquare[1] === '8' || targetSquare[1] === '1') &&
-              (piece[1] === 'p' || moveFromPiece?.type === 'p')
+              (piece === 'wp' &&
+                sourceSquare[1] === '7' &&
+                targetSquare[1] === '8') ||
+              (piece === 'bp' &&
+                sourceSquare[1] === '2' &&
+                targetSquare[1] === '1')
             ) {
-              return true;
+              // continue...
+              // check square range diff
+              return (
+                Math.abs(
+                  sourceSquare.charCodeAt(0) - targetSquare.charCodeAt(0),
+                ) <= 1
+              );
             }
             return false;
           }}
