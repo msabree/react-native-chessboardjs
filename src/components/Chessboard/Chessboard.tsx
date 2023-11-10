@@ -23,11 +23,13 @@ interface StylesMap {
   [key: string]: {};
 }
 
-const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
+export let SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
 
 const Chessboard = ({
   position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   onPieceDrop,
+  size,
+  onPress, // if function exists, chessboard is a button
   onPromotionCheck = () => {
     return false;
   },
@@ -42,6 +44,9 @@ const Chessboard = ({
   customSquareStyles = {} as StylesMap,
   boardOrientation = 'white',
 }: ChessBoardProps) => {
+  if (size) {
+    SIZE = size.width / COLUMN_LENGTH - MARGIN;
+  }
   const isBoardFlipped = boardOrientation === 'black';
   const drawBoard = () => {
     const board: { square: string }[][] = [];
@@ -80,107 +85,112 @@ const Chessboard = ({
   }, [position, isBoardFlipped, customSquareStylesString]);
 
   return (
-    <GestureHandlerRootView>
-      {/* Underlay of chessboard */}
-      {boardUnderlay.map((row, index) =>
-        row.map((square, idx) => {
-          const chessPiecePosition = getPosition(
-            index * COLUMN_LENGTH + idx,
-            isBoardFlipped
-          );
-          return (
-            <View
-              key={`${square.square}${isBoardFlipped}`}
-              style={{
-                ...((idx + index) % 2 === 0
-                  ? customLightSquareStyle
-                  : customDarkSquareStyle),
-                ...styles(idx, index, chessPiecePosition)?.chessSquare,
+    <TouchableOpacity onPress={onPress} activeOpacity={onPress ? 0.2 : 1}>
+      <GestureHandlerRootView>
+        {/* Underlay of chessboard */}
+        {boardUnderlay.map((row, index) =>
+          row.map((square, idx) => {
+            const chessPiecePosition = getPosition(
+              index * COLUMN_LENGTH + idx,
+              isBoardFlipped
+            );
+            return (
+              <View
+                key={`${square.square}${isBoardFlipped}`}
+                style={{
+                  ...((idx + index) % 2 === 0
+                    ? customLightSquareStyle
+                    : customDarkSquareStyle),
+                  ...styles(idx, index, chessPiecePosition)?.chessSquare,
+                }}
+              >
+                <View
+                  style={{
+                    ...styles(
+                      idx,
+                      index,
+                      getPosition(index * COLUMN_LENGTH + idx, isBoardFlipped)
+                    )?.chessSquareOverlay,
+                    ...customSquareStyles[square.square],
+                  }}
+                />
+              </View>
+            );
+          })
+        )}
+        {/* Overlay of chess pieces */}
+        {boardOverlay.map((row, index) =>
+          row.map((square, idx) => (
+            <ChessPiece
+              key={`${square}${index}${idx}${isBoardFlipped}`}
+              board={boardUnderlay}
+              boardState={boardOverlay}
+              row={index}
+              col={idx}
+              squareToHighlight={squareToHighlight}
+              setModalVisible={setModalVisible}
+              pieceSelected={pieceSelected as 'q' | 'r' | 'n' | 'b'}
+              setPieceSelected={setPieceSelected}
+              value={square}
+              trueIndex={index * COLUMN_LENGTH + idx}
+              onPieceDrop={onPieceDrop}
+              onPromotionCheck={onPromotionCheck}
+              onSquareClick={onSquareClick}
+              isDraggablePiece={isDraggablePiece}
+              position={getPosition(
+                index * COLUMN_LENGTH + idx,
+                isBoardFlipped
+              )}
+              isBoardFlipped={isBoardFlipped}
+              lastClickedSquare={lastClickedSquare}
+            />
+          ))
+        )}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isModalVisible}
+          // onRequestClose={() => {
+          //   setModalVisible(false);
+          // }}
+        >
+          <View style={rootStyles.modalContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+                setPieceSelected('q');
               }}
             >
-              <View
-                style={{
-                  ...styles(
-                    idx,
-                    index,
-                    getPosition(index * COLUMN_LENGTH + idx, isBoardFlipped)
-                  )?.chessSquareOverlay,
-                  ...customSquareStyles[square.square],
-                }}
-              />
-            </View>
-          );
-        })
-      )}
-      {/* Overlay of chess pieces */}
-      {boardOverlay.map((row, index) =>
-        row.map((square, idx) => (
-          <ChessPiece
-            key={`${square}${index}${idx}${isBoardFlipped}`}
-            board={boardUnderlay}
-            boardState={boardOverlay}
-            row={index}
-            col={idx}
-            squareToHighlight={squareToHighlight}
-            setModalVisible={setModalVisible}
-            pieceSelected={pieceSelected as 'q' | 'r' | 'n' | 'b'}
-            setPieceSelected={setPieceSelected}
-            value={square}
-            trueIndex={index * COLUMN_LENGTH + idx}
-            onPieceDrop={onPieceDrop}
-            onPromotionCheck={onPromotionCheck}
-            onSquareClick={onSquareClick}
-            isDraggablePiece={isDraggablePiece}
-            position={getPosition(index * COLUMN_LENGTH + idx, isBoardFlipped)}
-            isBoardFlipped={isBoardFlipped}
-            lastClickedSquare={lastClickedSquare}
-          />
-        ))
-      )}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isModalVisible}
-        // onRequestClose={() => {
-        //   setModalVisible(false);
-        // }}
-      >
-        <View style={rootStyles.modalContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              setModalVisible(false);
-              setPieceSelected('q');
-            }}
-          >
-            <Image style={rootStyles.pieceSelection} source={getImage('q')} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setModalVisible(false);
-              setPieceSelected('r');
-            }}
-          >
-            <Image style={rootStyles.pieceSelection} source={getImage('r')} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setModalVisible(false);
-              setPieceSelected('b');
-            }}
-          >
-            <Image style={rootStyles.pieceSelection} source={getImage('b')} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setModalVisible(false);
-              setPieceSelected('n');
-            }}
-          >
-            <Image style={rootStyles.pieceSelection} source={getImage('n')} />
-          </TouchableOpacity>
-        </View>
-      </Modal>
-    </GestureHandlerRootView>
+              <Image style={rootStyles.pieceSelection} source={getImage('q')} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+                setPieceSelected('r');
+              }}
+            >
+              <Image style={rootStyles.pieceSelection} source={getImage('r')} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+                setPieceSelected('b');
+              }}
+            >
+              <Image style={rootStyles.pieceSelection} source={getImage('b')} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+                setPieceSelected('n');
+              }}
+            >
+              <Image style={rootStyles.pieceSelection} source={getImage('n')} />
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      </GestureHandlerRootView>
+    </TouchableOpacity>
   );
 };
 
@@ -242,6 +252,11 @@ type ChessBoardProps = {
     targetSquare: Square,
     piece: Piece
   ) => boolean;
+  size?: {
+    width: number;
+    height: number;
+  };
+  onPress?: () => void;
   onPromotionCheck?: (
     sourceSquare: Square,
     targetSquare: Square,

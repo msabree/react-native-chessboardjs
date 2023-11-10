@@ -1,7 +1,5 @@
-import { Dimensions } from 'react-native';
-import { COLUMN_LENGTH, MARGIN } from '../constants';
-
-const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
+import { COLUMN_LENGTH } from '../constants';
+import { SIZE } from '../components/Chessboard/Chessboard';
 
 export const getPosition = (index: number, isBoardFlipped: boolean) => {
   'worklet';

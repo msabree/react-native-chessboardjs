@@ -1,6 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useState } from 'react';
-import { Dimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -12,10 +11,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import type { FenPosition, Piece, Square } from '../../@types';
-import { COLUMN_LENGTH, MARGIN, columns, rows } from '../../constants';
+import { COLUMN_LENGTH, columns, rows } from '../../constants';
 import { getPosition, getSquare, getImage } from '../../utils';
-
-const SIZE = Dimensions.get('window').width / COLUMN_LENGTH - MARGIN;
+import { SIZE } from '../Chessboard/Chessboard';
 
 const ChessPiece = ({
   board,
