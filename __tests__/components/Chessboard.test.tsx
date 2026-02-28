@@ -6,16 +6,18 @@ import renderer from 'react-test-renderer';
 
 jest.useFakeTimers();
 
-jest.mock('react-native', () => {
-  return {
-    View: () => <></>,
-    Dimensions: {
-      get: () => {
-        return { width: {} };
-      },
-    },
-  };
-});
+jest.mock('react-native', () => ({
+  View: () => <></>,
+  Text: () => <></>,
+  TouchableOpacity: () => <></>,
+  Pressable: () => <></>,
+  StyleSheet: {
+    create: (styles: Record<string, unknown>) => styles,
+  },
+  Dimensions: {
+    get: () => ({ width: 320, height: 320 }),
+  },
+}));
 
 jest.mock('react-native-gesture-handler', () => {
   return {
