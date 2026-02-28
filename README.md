@@ -7,30 +7,48 @@
 </div>
 
 # What is react-native-chessboardjs?
-react-native-chess-boardjs is a react native based implementation of https://www.npmjs.com/package/react-chessboard
+
+A React Native chessboard with drag-and-drop, promotion dialogs, and customizable styling. Built on a modern stack: **@mgcrea/react-native-dnd** for gestures and **react-native-svg** for piece graphics. The API is inspired by [react-chessboard](https://www.npmjs.com/package/react-chessboard) and uses FEN for position and callbacks for moves, promotion, and square clicks.
 
 ## Installation
 
 ```bash
-# using npm (will need to register a package name with npm)
 npm i react-native-chessboardjs
-
-# OR using Yarn
+# or
 yarn add react-native-chessboardjs
 ```
 
+### Peer dependencies
+
+The library depends on:
+
+- `react-native-gesture-handler`
+- `react-native-reanimated`
+- `react-native-svg`
+- `@mgcrea/react-native-dnd`
+
+They are listed as dependencies; if you use a monorepo or strict peer resolution, install them in your app.
+
+### iOS
+
 ```bash
-# Link native libs
 cd ios && pod install && cd ..
-
-#if you have any issues try adding the following to your Podfile
-pod 'RNReanimated', :path => '../node_modules/react-native-reanimated'
-pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
-
 ```
 
-### Detailed Example
-#### IMPORTANT: Examples use the current stable release of chess.js. These examples use chess.js ^1.0.0-beta.6
+If you have issues, add to your Podfile:
+
+```ruby
+pod 'RNReanimated', :path => '../node_modules/react-native-reanimated'
+pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
+```
+
+### Android
+
+No extra setup beyond linking. Ensure your app has the required native modules for the dependencies above.
+
+## Example
+
+Uses [chess.js](https://github.com/jhlywa/chess.js) (e.g. `^1.0.0-beta.6` or `^1.2.0`) for move validation.
 
 ```jsx
 function App(): JSX.Element {
@@ -181,19 +199,23 @@ const styles = StyleSheet.create({
 export default App;
 ```
 
-### Props
+## Props
 
-| Prop                          | Default Value                                                     | Options                                            | Description                                                                                                                                                                                                                                                                                                                                                                          |
-| ----------------------------- | ----------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| boardOrientation              | string: 'white'                                                   | ['white', 'black']                                 | The orientation of the board, the chosen color will be at the bottom of the board. 
-| customDarkSquareStyle              | object: { backgroundColor: '#B58863' }                                                  | inline CSS styling                                | Custom dark square style object.
-| customLightSquareStyle              | object: { backgroundColor: '#B58863' }                                                  | inline CSS styling                                | Custom light square style object.
-| customSquareStyles              | object: {}                                                  | inline CSS styling                                | Custom styles for all squares. object.                                                                                                          
-| isDraggablePiece              | function: ({ piece, sourceSquare }) => true                                                                                                                                                                                                                                       | returns [true, false]                              | Function called when a piece drag is attempted. Returns if piece is draggable.                                                                                                                                                                                                                                                                                                       |
-| onPieceDrop                   | function: (sourceSquare, targetSquare, piece) => true             | returns [true, false]                              | User function that is run when piece is dropped on a square. Must return whether the move was successful or not. This return value does not control whether or not the piece was placed (as that is controlled by the `position` prop) but instead controls premove logic.
-| onPromotionCheck              | function: (sourceSquare, targetSquare, piece) => (((piece === "wP" && sourceSquare[1] === "7" && targetSquare[1] === "8") \|\| (piece === "bP" && sourceSquare[1] === "2" && targetSquare[1] === "1")) && Math.abs(sourceSquare.charCodeAt(0) - targetSquare.charCodeAt(0)) <= 1) | returns [true, false]                              | User function that is run when piece is dropped. Must return whether the move results in a promotion or not.                                                                                                                                                                                                                                                                         |                                                                                                                    
-| onSquareClick                   | function: (sourceSquare) => {}             |                              | User function that is run when piece is tapped ('clicked').                                                                                                                                                                                            |
-| position                   | Board will render the starting FEN position.            |                              | FEN string notating where the chess pieces are on the board.                                                                                                                                                                                                                                            |
+Piece type in callbacks uses lowercase letter: `'wk'`, `'bq'`, `'wp'`, etc. (e.g. white king = `'wk'`, black pawn = `'bp'`).
+
+| Prop | Default | Description |
+|------|---------|-------------|
+| `boardOrientation` | `'white'` | `'white'` or `'black'`. The chosen color is at the bottom. |
+| `customDarkSquareStyle` | `{ backgroundColor: 'black' }` | Style object for dark squares. |
+| `customLightSquareStyle` | `{ backgroundColor: 'white' }` | Style object for light squares. |
+| `customSquareStyles` | `{}` | Keyed by square (e.g. `'e4'`). Styles applied on top of base square styles. |
+| `position` | Start FEN | FEN string for the board position. |
+| `size` | — | Optional `{ width, height }`. Board width; height unused. If omitted, uses window width. |
+| `onPress` | — | Optional. If provided, wraps the board in a touchable and calls this on press. |
+| `onPieceDrop` | **required** | `(sourceSquare, targetSquare, piece) => boolean`. Called when a piece is dropped. Return `true` if the move is accepted. |
+| `onSquareClick` | `() => true` | `(square) => boolean`. Called when a square is tapped. |
+| `onPromotionCheck` | pawn on last rank | `(sourceSquare, targetSquare, piece) => boolean`. Return `true` when the move is a promotion (so the promotion dialog is shown). |
+| `isDraggablePiece` | `() => true` | `({ piece }) => boolean`. Return `false` to disable dragging for that piece. |
 
 ## Contributing
 
