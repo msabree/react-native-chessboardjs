@@ -5,9 +5,6 @@ import type { ClearPremoves } from '../../chessboard-lib';
 import type { Piece as LibPiece } from '../../chessboard-lib/types';
 import type { Piece, Square } from '../../@types';
 
-/** @deprecated Use board width / 8. Exported for backward compatibility. */
-export const SIZE = Dimensions.get('window').width / 8;
-
 export type { ClearPremoves };
 
 /** Convert lib piece (wK, bP) to legacy format (wk, bp) */
