@@ -41,18 +41,32 @@ The library ships with these as **dependencies** (they install automatically):
 
 In a monorepo or with strict peer resolution, ensure the four dependencies above are installed and linked in the app that uses the board.
 
-### Local / development install
+### Metro configuration (file: link or package outside app root)
 
-To use the package from a local path (e.g. before publishing):
+If you install the package via `file:` (e.g. `"react-native-chessboardjs": "file:../../react-native-chessboardjs"`) or use it from a path outside your app root, Metro may fail to resolve the module or resolve `react` / `react-native` from the wrong place. In your **app’s** `metro.config.js`, add the package path to `watchFolders` and point `react` and `react-native` at your app’s `node_modules`:
 
-```bash
-# From your app directory
-npm i file:../../path/to/react-native-chessboardjs
-# or
-yarn add file:../../path/to/react-native-chessboardjs
+```js
+const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
+
+const config = getDefaultConfig(__dirname);
+
+// Path to the package (adjust if your layout differs)
+const linkedPackagePath = path.resolve(__dirname, '../../react-native-chessboardjs');
+config.watchFolders = [...(config.watchFolders || []), linkedPackagePath];
+
+// Resolve react/react-native from the app when bundling the linked package
+const projectRoot = __dirname;
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  react: path.resolve(projectRoot, 'node_modules/react'),
+  'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
+};
+
+module.exports = config;
 ```
 
-With `file:`, Metro uses the package’s `react-native` field and runs from **source** (`src/index`). You can run the app without building the library. To publish or use the built output, run `yarn prepare` or `yarn build` in the library directory so `lib/` is generated.
+Restart Metro with `npx expo start --clear` (or your bundler’s cache-clear) after changing Metro config.
 
 ### iOS
 
