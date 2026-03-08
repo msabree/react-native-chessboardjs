@@ -40,7 +40,6 @@ export const Chessboard = forwardRef<ClearPremoves, ChessboardProps>(
           <ChessboardDnDProvider>
             {boardWidth > 0 && (
               <ChessboardProvider boardWidth={boardWidth} {...otherProps} ref={ref}>
-                {/* <CustomDragLayer boardContainer={boardContainerPos} /> */}
                 <Board />
               </ChessboardProvider>
             )}
