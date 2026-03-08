@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { Dimensions, TouchableOpacity, View } from 'react-native';
 import { Chessboard as LibChessboard } from '../../chessboard-lib';
+import type { ClearPremoves } from '../../chessboard-lib';
 import type { Piece as LibPiece } from '../../chessboard-lib/types';
 import type { Piece, Square } from '../../@types';
 
 /** @deprecated Use board width / 8. Exported for backward compatibility. */
 export const SIZE = Dimensions.get('window').width / 8;
+
+export type { ClearPremoves };
 
 /** Convert lib piece (wK, bP) to legacy format (wk, bp) */
 function pieceLibToLegacy(p: LibPiece): Piece {
@@ -38,83 +41,104 @@ export type ChessBoardProps = {
   customSquareStyles?: StylesMap;
   customBoardStyle?: Record<string, string | number>;
   boardOrientation?: 'black' | 'white';
+  arePremovesAllowed?: boolean;
+  whiteKingInCheck?: boolean;
+  blackKingInCheck?: boolean;
 };
 
-const Chessboard = ({
-  position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
-  onPieceDrop,
-  size,
-  onPress,
-  onPromotionCheck = () => false,
-  onSquareClick = () => true,
-  isDraggablePiece = () => true,
-  customDarkSquareStyle = { backgroundColor: 'black' },
-  customLightSquareStyle = { backgroundColor: 'white' },
-  customSquareStyles = {},
-  boardOrientation = 'white',
-}: ChessBoardProps) => {
-  const boardWidth = size?.width ?? Dimensions.get('window').width;
+const Chessboard = forwardRef<ClearPremoves, ChessBoardProps>(
+  (
+    {
+      position = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
+      onPieceDrop,
+      size,
+      onPress,
+      onPromotionCheck = () => false,
+      onSquareClick = () => true,
+      isDraggablePiece = () => true,
+      customDarkSquareStyle = { backgroundColor: 'black' },
+      customLightSquareStyle = { backgroundColor: 'white' },
+      customSquareStyles = {},
+      customBoardStyle,
+      boardOrientation = 'white',
+      arePremovesAllowed = false,
+      whiteKingInCheck = false,
+      blackKingInCheck = false,
+    },
+    ref
+  ) => {
+    const boardWidth = size?.width ?? Dimensions.get('window').width;
 
-  const boardElement = (
-    <LibChessboard
-      position={
-        position === 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
-          ? 'start'
-          : position
-      }
-      boardWidth={boardWidth}
-      boardOrientation={boardOrientation}
-      customDarkSquareStyle={customDarkSquareStyle as Record<string, string>}
-      customLightSquareStyle={customLightSquareStyle as Record<string, string>}
-      customSquareStyles={customSquareStyles}
-      onPieceDrop={(sourceSquare, targetSquare, piece) =>
-        onPieceDrop(
-          sourceSquare as Square,
-          targetSquare as Square,
-          pieceLibToLegacy(piece)
-        )
-      }
-      onPromotionCheck={(sourceSquare, targetSquare, piece) =>
-        onPromotionCheck(
-          sourceSquare as Square,
-          targetSquare as Square,
-          pieceLibToLegacy(piece)
-        )
-      }
-      onSquareClick={(square) => onSquareClick(square as Square)}
-      isDraggablePiece={({ piece }) =>
-        isDraggablePiece({ piece: pieceLibToLegacy(piece) })
-      }
-      onPromotionPieceSelect={(piece, promoteFromSquare, promoteToSquare) => {
-        if (promoteFromSquare && promoteToSquare && piece) {
-          const ok = onPieceDrop(
-            promoteFromSquare as Square,
-            promoteToSquare as Square,
-            pieceLibToLegacy(piece)
-          );
-          return ok;
+    const boardElement = (
+      <LibChessboard
+        ref={ref}
+        position={
+          position === 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
+            ? 'start'
+            : position
         }
-        return true;
-      }}
-      showPromotionDialog={true}
-    />
-  );
-
-  const content = (
-    <View style={boardWidth > 0 ? { width: boardWidth } : undefined}>
-      {boardElement}
-    </View>
-  );
-
-  if (onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.2}>
-        {content}
-      </TouchableOpacity>
+        boardWidth={boardWidth}
+        boardOrientation={boardOrientation}
+        customDarkSquareStyle={customDarkSquareStyle as Record<string, string>}
+        customLightSquareStyle={
+          customLightSquareStyle as Record<string, string>
+        }
+        customSquareStyles={customSquareStyles}
+        customBoardStyle={customBoardStyle}
+        arePremovesAllowed={arePremovesAllowed}
+        whiteKingInCheck={whiteKingInCheck}
+        blackKingInCheck={blackKingInCheck}
+        onPieceDrop={(sourceSquare, targetSquare, piece) =>
+          onPieceDrop(
+            sourceSquare as Square,
+            targetSquare as Square,
+            pieceLibToLegacy(piece)
+          )
+        }
+        onPromotionCheck={(sourceSquare, targetSquare, piece) =>
+          onPromotionCheck(
+            sourceSquare as Square,
+            targetSquare as Square,
+            pieceLibToLegacy(piece)
+          )
+        }
+        onSquareClick={(square) => onSquareClick(square as Square)}
+        isDraggablePiece={({ piece }) =>
+          isDraggablePiece({ piece: pieceLibToLegacy(piece) })
+        }
+        onPromotionPieceSelect={(piece, promoteFromSquare, promoteToSquare) => {
+          if (promoteFromSquare && promoteToSquare && piece) {
+            const ok = onPieceDrop(
+              promoteFromSquare as Square,
+              promoteToSquare as Square,
+              pieceLibToLegacy(piece)
+            );
+            return ok;
+          }
+          return true;
+        }}
+        showPromotionDialog={true}
+      />
     );
-  }
 
-  return content;
-};
+    const content = (
+      <View style={boardWidth > 0 ? { width: boardWidth } : undefined}>
+        {boardElement}
+      </View>
+    );
+
+    if (onPress) {
+      return (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.2}>
+          {content}
+        </TouchableOpacity>
+      );
+    }
+
+    return content;
+  }
+);
+
+Chessboard.displayName = 'Chessboard';
 
 export default Chessboard;
