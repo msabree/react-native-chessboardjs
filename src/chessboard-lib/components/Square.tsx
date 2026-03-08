@@ -52,6 +52,13 @@ export function Square({
   const isOver = dragState.droppableActiveId === square || 
                  dragState.droppableActiveId?.toString() === square ||
                  (typeof dragState.droppableActiveId === 'string' && dragState.droppableActiveId === square);
+  // When this square's piece is being dragged, lift the whole square so the piece stays above the board
+  const piece = currentPosition[square];
+  const isDraggingFromHere = Boolean(
+    dragState.isDragging &&
+    piece &&
+    (dragState.activeId?.toString() === `${square}-${piece}`)
+  );
 
   const defaultSquareStyle = {
     ...borderRadius(square, boardOrientation, customBoardStyle),
@@ -96,8 +103,6 @@ export function Square({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dropState.droppedId, dropState.droppedTargetSquare, square, clearDropState]);
 
-  const piece = currentPosition[square]
-
   return (
       <Pressable
         ref={squareRef}
@@ -116,7 +121,8 @@ export function Square({
             height: boardWidth / 8,
             justifyContent: "center",
             alignItems: "center",
-            zIndex: isOver ? 2 : 1,
+            zIndex: isDraggingFromHere ? 1000 : isOver ? 2 : 1,
+            elevation: isDraggingFromHere ? 1000 : isOver ? 2 : 1,
           },
         ]}
         onPress={() => {
