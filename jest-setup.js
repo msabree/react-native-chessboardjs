@@ -1,5 +1,33 @@
 /* eslint-env jest */
-require('react-native-reanimated').setUpTests();
+// Mock react-native so it's not loaded from node_modules (Flow syntax breaks Jest's Babel)
+jest.mock('react-native', () => {
+  const React = require('react');
+  return {
+    View: (props) => React.createElement('View', props),
+    Text: (props) => React.createElement('Text', props),
+    Pressable: (props) => React.createElement('Pressable', props),
+    StyleSheet: { create: (s) => s },
+    Dimensions: { get: () => ({ width: 320, height: 320 }) },
+  };
+});
+// Mock react-native-reanimated so it doesn't pull in react-native
+jest.mock('react-native-reanimated', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: View,
+    setUpTests: jest.fn(),
+    createAnimatedComponent: (c) => c,
+    FadeIn: null,
+    FadeOut: null,
+    SlideInDown: null,
+    useSharedValue: (v) => ({ value: v }),
+    useAnimatedStyle: () => ({}),
+    withSpring: (v) => v,
+    runOnJS: (fn) => fn,
+  };
+});
 
 // Mock react-native-svg (avoids Touchable dependency in Jest and speeds up tests)
 jest.mock('react-native-svg', () => {
