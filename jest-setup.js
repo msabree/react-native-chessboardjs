@@ -10,6 +10,7 @@ jest.mock('react-native-reanimated', () => {
       return React.useRef({ value: v }).current;
     },
     useAnimatedStyle: (fn) => fn(),
+    withTiming: (v) => v,
   };
 });
 
@@ -29,6 +30,8 @@ jest.mock('react-native-svg', () => {
     G: Mock,
     Path: Mock,
     Circle: Mock,
+    Polyline: Mock,
+    Polygon: Mock,
   };
 });
 

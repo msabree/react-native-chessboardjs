@@ -26,6 +26,7 @@ import {
 } from './defaults';
 import { defaultPieces } from './pieces';
 import type {
+  Arrow,
   ArrowOptions,
   ChessboardOptions,
   DraggingPieceDataType,
@@ -76,6 +77,16 @@ export type ChessboardContextType = Resolved & {
   dragY: SharedValue<number>;
   /** Internal drag lifecycle, called from the board gesture. */
   dragApi: DragApi;
+  /** Arrows drawn by the user (the `arrows` option holds external ones). */
+  internalArrows: Arrow[];
+  /** Arrow being drawn right now. */
+  newArrow: { startSquare: string; overSquare: string | null } | null;
+  clearArrows: () => void;
+  /** Last accepted drop, so the move is not animated again. Internal. */
+  lastDropRef: React.MutableRefObject<{
+    source: string;
+    target: string;
+  } | null>;
   /** Board width in px, 0 until known. */
   boardWidth: number;
   squareWidth: number;
@@ -88,6 +99,11 @@ export type DragApi = {
   over: (square: string | null) => void;
   end: (targetSquare: string | null) => void;
   cancel: () => void;
+  tap: (square: string | null) => void;
+  arrowStart: (square: string | null) => void;
+  arrowOver: (square: string | null) => void;
+  arrowEnd: (square: string | null) => void;
+  arrowCancel: () => void;
 };
 
 type PendingDrop = {
@@ -147,7 +163,7 @@ export function ChessboardProvider({
 
     allowDragging = true,
     allowDragOffBoard = true,
-    dragActivationDistance = 1,
+    dragActivationDistance = 5,
 
     allowDrawingArrows = true,
     arrows = [],
@@ -157,6 +173,14 @@ export function ChessboardProvider({
 
     ...handlers
   } = options;
+
+  const arrowOptionsResolved: ArrowOptions = {
+    ...defaultArrowOptions,
+    ...arrowOptions,
+    colors: { ...defaultArrowOptions.colors, ...arrowOptions?.colors },
+  };
+  const arrowColorRef = useRef(arrowOptionsResolved.colors.default);
+  arrowColorRef.current = arrowOptionsResolved.colors.default;
 
   const [measuredWidth, setMeasuredWidth] = useState(0);
   const boardWidth = fixedWidth ?? measuredWidth;
@@ -205,8 +229,16 @@ export function ChessboardProvider({
     onPieceDrag: handlers.onPieceDrag,
     onPieceDrop: handlers.onPieceDrop,
     onPieceDragCancel: handlers.onPieceDragCancel,
+    onPieceClick: handlers.onPieceClick,
+    onSquareClick: handlers.onSquareClick,
+    onSquareLongPress: handlers.onSquareLongPress,
+    allowDrawingArrows,
+    clearArrowsOnClick,
+    arrows,
+    newArrow: null as { startSquare: string; overSquare: string | null } | null,
   });
   latest.current = {
+    ...latest.current,
     currentPosition,
     positionFromProps,
     draggingPiece,
@@ -215,7 +247,15 @@ export function ChessboardProvider({
     onPieceDrag: handlers.onPieceDrag,
     onPieceDrop: handlers.onPieceDrop,
     onPieceDragCancel: handlers.onPieceDragCancel,
+    onPieceClick: handlers.onPieceClick,
+    onSquareClick: handlers.onSquareClick,
+    onSquareLongPress: handlers.onSquareLongPress,
+    allowDrawingArrows,
+    clearArrowsOnClick,
+    arrows,
   };
+
+  const lastDropRef = useRef<{ source: string; target: string } | null>(null);
 
   const start = useCallback((square: string) => {
     const l = latest.current;
@@ -253,6 +293,7 @@ export function ChessboardProvider({
       }) ?? false;
 
     if (accepted && targetSquare && targetSquare !== dragging.position) {
+      lastDropRef.current = { source: dragging.position, target: targetSquare };
       const next = { ...l.currentPosition };
       delete next[dragging.position];
       next[targetSquare] = { pieceType: dragging.pieceType };
@@ -270,9 +311,126 @@ export function ChessboardProvider({
     latest.current.onPieceDragCancel?.();
   }, []);
 
+  // arrows
+  const [internalArrows, setInternalArrows] = useState<Arrow[]>([]);
+  const [newArrow, setNewArrowState] = useState<{
+    startSquare: string;
+    overSquare: string | null;
+  } | null>(null);
+  const setNewArrow = useCallback(
+    (a: { startSquare: string; overSquare: string | null } | null) => {
+      latest.current.newArrow = a;
+      setNewArrowState(a);
+    },
+    []
+  );
+
+  const clearArrows = useCallback(() => {
+    setInternalArrows((prev) => (prev.length ? [] : prev));
+    setNewArrow(null);
+  }, [setNewArrow]);
+
+  const onArrowsChange = handlers.onArrowsChange;
+  const mounted = useRef(false);
+  useEffect(() => {
+    // v5 also reports on mount
+    onArrowsChange?.({ arrows: internalArrows });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [internalArrows]);
+
+  useEffect(() => {
+    if (mounted.current && clearArrowsOnPositionChange) clearArrows();
+    mounted.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionFromProps]);
+
+  const tap = useCallback((square: string | null) => {
+    if (!square) return;
+    const l = latest.current;
+    const piece = l.currentPosition[square] ?? null;
+    if (piece) l.onPieceClick?.({ isSparePiece: false, piece, square });
+    l.onSquareClick?.({ piece, square });
+    if (l.clearArrowsOnClick) {
+      setInternalArrows((prev) => (prev.length ? [] : prev));
+    }
+  }, []);
+
+  const arrowStart = useCallback(
+    (square: string | null) => {
+      if (!square) return;
+      setNewArrow({ startSquare: square, overSquare: square });
+    },
+    [setNewArrow]
+  );
+
+  const arrowOver = useCallback(
+    (square: string | null) => {
+      const a = latest.current.newArrow;
+      if (!a || !latest.current.allowDrawingArrows) return;
+      setNewArrow({ ...a, overSquare: square });
+    },
+    [setNewArrow]
+  );
+
+  const arrowEnd = useCallback(
+    (square: string | null) => {
+      const l = latest.current;
+      const a = l.newArrow;
+      setNewArrow(null);
+      if (!a) return;
+      // long press without dragging: the mobile right click
+      if (square === a.startSquare) {
+        l.onSquareLongPress?.({
+          piece: l.currentPosition[a.startSquare] ?? null,
+          square: a.startSquare,
+        });
+        return;
+      }
+      if (!square || !l.allowDrawingArrows) return;
+      const exists = (x: Arrow) =>
+        x.startSquare === a.startSquare && x.endSquare === square;
+      if (l.arrows.some(exists)) return;
+      setInternalArrows((prev) =>
+        prev.some(exists)
+          ? prev.filter((x) => !exists(x))
+          : [
+              ...prev,
+              {
+                startSquare: a.startSquare,
+                endSquare: square,
+                color: arrowColorRef.current,
+              },
+            ]
+      );
+    },
+    [setNewArrow]
+  );
+
+  const arrowCancel = useCallback(() => setNewArrow(null), [setNewArrow]);
+
   const dragApi = useMemo<DragApi>(
-    () => ({ start, over, end, cancel }),
-    [start, over, end, cancel]
+    () => ({
+      start,
+      over,
+      end,
+      cancel,
+      tap,
+      arrowStart,
+      arrowOver,
+      arrowEnd,
+      arrowCancel,
+    }),
+    [
+      start,
+      over,
+      end,
+      cancel,
+      tap,
+      arrowStart,
+      arrowOver,
+      arrowEnd,
+      arrowCancel,
+    ]
   );
 
   const value: ChessboardContextType = {
@@ -301,11 +459,7 @@ export function ChessboardProvider({
     dragActivationDistance,
     allowDrawingArrows,
     arrows,
-    arrowOptions: {
-      ...defaultArrowOptions,
-      ...arrowOptions,
-      colors: { ...defaultArrowOptions.colors, ...arrowOptions?.colors },
-    },
+    arrowOptions: arrowOptionsResolved,
     clearArrowsOnClick,
     clearArrowsOnPositionChange,
     ...handlers,
@@ -316,6 +470,10 @@ export function ChessboardProvider({
     dragX,
     dragY,
     dragApi,
+    internalArrows,
+    newArrow,
+    clearArrows,
+    lastDropRef,
     boardWidth,
     squareWidth: boardWidth / chessboardColumns,
     setMeasuredWidth,

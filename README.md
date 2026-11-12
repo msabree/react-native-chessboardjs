@@ -8,8 +8,6 @@ A React Native chessboard with real drag and drop. Same API as [react-chessboard
 
 </div>
 
-> **1.0 is in progress.** Done: options API, board rendering, utils, drag and drop. Coming: taps, animations, arrows, spare pieces.
-
 ## Why
 
 - **Pieces stay on top while dragging.** Every piece lives in one layer above the squares, so a dragged piece never slides under the board.
@@ -120,15 +118,43 @@ All options are optional. Names and defaults match react-chessboard v5. Styles a
 | --- | --- | --- | --- |
 | `allowDragging` | `boolean` | `true` | |
 | `allowDragOffBoard` | `boolean` | `true` | When false, the piece stays inside the board. |
-| `dragActivationDistance` | `number` | `1` | Points the finger moves before a drag starts. |
+| `dragActivationDistance` | `number` | `5` | Points the finger moves before a drag starts. Higher than web's `1` so taps and long presses register on touch. |
 | `canDragPiece` | `({ isSparePiece, piece, square }) => boolean` | | |
 | `onPieceDrag` | `({ isSparePiece, piece, square }) => void` | | Drag started. |
 | `onPieceDrop` | `({ piece, sourceSquare, targetSquare }) => boolean` | | Return `true` to accept. `targetSquare` is `null` when dropped off the board. |
 | `onPieceDragCancel` | `() => void` | | Drag interrupted by the system. |
 
-### Taps, animation, arrows (coming in 1.0)
+### Taps
 
-`onSquareClick`, `onPieceClick`, `onSquareLongPress` (mobile version of `onSquareRightClick`), `showAnimations`, `animationDurationInMs`, `allowDrawingArrows`, `arrows`, `arrowOptions`, `clearArrowsOnClick`, `clearArrowsOnPositionChange`, `onArrowsChange`.
+| Option | Type | |
+| --- | --- | --- |
+| `onPieceClick` | `({ isSparePiece, piece, square }) => void` | Tap on a piece. Fires before `onSquareClick`. |
+| `onSquareClick` | `({ piece, square }) => void` | Tap on any square. Use with `squareStyles` for tap to move. |
+| `onSquareLongPress` | `({ piece, square }) => void` | Hold still on a square. Mobile version of `onSquareRightClick`. |
+
+### Animation
+
+| Option | Type | Default | |
+| --- | --- | --- | --- |
+| `showAnimations` | `boolean` | `true` | Pieces slide when `position` changes, promotions included. A piece you just dropped does not slide again. |
+| `animationDurationInMs` | `number` | `300` | |
+
+### Arrows
+
+Long press a square, then drag to another square to draw an arrow. Draw the same arrow again to remove it.
+
+| Option | Type | Default | |
+| --- | --- | --- | --- |
+| `allowDrawingArrows` | `boolean` | `true` | |
+| `arrows` | `Arrow[]` | `[]` | Your own arrows, `{ startSquare, endSquare, color }`. Drawn alongside the user's. |
+| `arrowOptions` | `Partial<ArrowOptions>` | v5 defaults | Colors, width, length and opacity. On touch only `colors.default` is used. |
+| `clearArrowsOnClick` | `boolean` | `true` | A tap clears drawn arrows. |
+| `clearArrowsOnPositionChange` | `boolean` | `true` | |
+| `onArrowsChange` | `({ arrows }) => void` | | The user's drawn arrows. |
+
+### Coming in 1.1
+
+`SparePiece` (drag pieces onto the board from outside it, for bughouse style drops).
 
 ### Not on mobile
 
@@ -136,7 +162,7 @@ Hover and mouse events (`onMouseOverSquare`, `onMouseOutSquare`, `onSquareMouseD
 
 ## ChessboardProvider
 
-Same as v5. Wrap a board (and later, spare pieces) to share state, and read it with `useChessboardContext()`:
+Same as v5. Wrap a board to share state, and read it with `useChessboardContext()`:
 
 ```tsx
 <ChessboardProvider options={{ position: fen, onPieceDrop }}>

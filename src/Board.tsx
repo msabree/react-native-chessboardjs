@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { useChessboardContext } from './ChessboardProvider';
+import { Arrows } from './Arrows';
 import { DraggingPiece } from './DraggingPiece';
 import { PieceLayer } from './PieceLayer';
 import { Square } from './Square';
@@ -49,6 +50,7 @@ export function Board() {
               </View>
             ))}
             <PieceLayer />
+            <Arrows />
           </View>
         </GestureDetector>
       )}

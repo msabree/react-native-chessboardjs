@@ -48,12 +48,14 @@ describe('Chessboard render', () => {
 
   it('places pieces by square in white orientation', () => {
     const r = render({});
-    expect(flat(byId(r, 'piece-wK-e1').props.style)).toMatchObject({
+    expect(flat(byId(r, 'slot-e1').props.style)).toMatchObject({
       left: 160,
       top: 280,
+    });
+    expect(flat(byId(r, 'piece-wK-e1').props.style)).toMatchObject({
       width: 40,
     });
-    expect(flat(byId(r, 'piece-bR-a8').props.style)).toMatchObject({
+    expect(flat(byId(r, 'slot-a8').props.style)).toMatchObject({
       left: 0,
       top: 0,
     });
@@ -61,11 +63,11 @@ describe('Chessboard render', () => {
 
   it('flips for black orientation', () => {
     const r = render({ boardOrientation: 'black' });
-    expect(flat(byId(r, 'piece-bR-a8').props.style)).toMatchObject({
+    expect(flat(byId(r, 'slot-a8').props.style)).toMatchObject({
       left: 280,
       top: 280,
     });
-    expect(flat(byId(r, 'piece-wR-h1').props.style)).toMatchObject({
+    expect(flat(byId(r, 'slot-h1').props.style)).toMatchObject({
       left: 0,
       top: 0,
     });
@@ -76,7 +78,7 @@ describe('Chessboard render', () => {
       byPrefix(render({ position: '8/8/8/8/4P3/8/8/8 w - - 0 1' }), 'piece-')
     ).toHaveLength(1);
     const r = render({ position: { d4: { pieceType: 'wQ' } } });
-    expect(flat(byId(r, 'piece-wQ-d4').props.style)).toMatchObject({
+    expect(flat(byId(r, 'slot-d4').props.style)).toMatchObject({
       left: 120,
       top: 160,
     });

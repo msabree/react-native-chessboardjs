@@ -1,5 +1,9 @@
 import { useEffect } from 'react';
-import { usePanGesture } from 'react-native-gesture-handler';
+import {
+  useCompetingGestures,
+  usePanGesture,
+  useTapGesture,
+} from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useChessboardContext } from './ChessboardProvider';
@@ -23,6 +27,8 @@ export function useBoardGesture() {
     dragX,
     dragY,
     dragApi,
+    allowDrawingArrows,
+    onSquareLongPress,
   } = useChessboardContext();
 
   // geometry mirrored into a shared value so worklets always see the latest
@@ -54,9 +60,19 @@ export function useBoardGesture() {
   const overSquare = useSharedValue<string | null>(null);
   const active = useSharedValue(false);
 
-  const { start, over, end, cancel } = dragApi;
+  const {
+    start,
+    over,
+    end,
+    cancel,
+    tap,
+    arrowStart,
+    arrowOver,
+    arrowEnd,
+    arrowCancel,
+  } = dragApi;
 
-  return usePanGesture({
+  const piecePan = usePanGesture({
     testID: `${id}-pan`,
     enabled: allowDragging,
     minDistance: dragActivationDistance,
@@ -115,7 +131,79 @@ export function useBoardGesture() {
       );
     },
   });
+
+  const tapGesture = useTapGesture({
+    testID: `${id}-tap`,
+    maxDistance: 10,
+    onActivate: (e) => {
+      'worklet';
+      const g = geom.value;
+      scheduleOnRN(
+        tap,
+        pointToSquare(e.x, e.y, g.sq, g.rows, g.cols, g.orientation)
+      );
+    },
+  });
+
+  // long press, then drag to draw an arrow (web: right click drag).
+  // long press without moving is the mobile right click.
+  const arrowSquare = useSharedValue<string | null>(null);
+  const arrowActive = useSharedValue(false);
+  const arrowPan = usePanGesture({
+    testID: `${id}-arrow`,
+    enabled: allowDrawingArrows || onSquareLongPress !== undefined,
+    activateAfterLongPress: LONG_PRESS_MS,
+    maxPointers: 1,
+    onBegin: (e) => {
+      'worklet';
+      const g = geom.value;
+      arrowSquare.value = pointToSquare(
+        e.x,
+        e.y,
+        g.sq,
+        g.rows,
+        g.cols,
+        g.orientation
+      );
+    },
+    onActivate: () => {
+      'worklet';
+      if (!arrowSquare.value) return;
+      arrowActive.value = true;
+      scheduleOnRN(arrowStart, arrowSquare.value);
+    },
+    onUpdate: (e) => {
+      'worklet';
+      if (!arrowActive.value) return;
+      const g = geom.value;
+      const sq = pointToSquare(e.x, e.y, g.sq, g.rows, g.cols, g.orientation);
+      if (sq !== arrowSquare.value) {
+        arrowSquare.value = sq;
+        scheduleOnRN(arrowOver, sq);
+      }
+    },
+    onDeactivate: (e) => {
+      'worklet';
+      if (!arrowActive.value) return;
+      arrowActive.value = false;
+      if (e.canceled) {
+        scheduleOnRN(arrowCancel);
+        return;
+      }
+      const g = geom.value;
+      scheduleOnRN(
+        arrowEnd,
+        pointToSquare(e.x, e.y, g.sq, g.rows, g.cols, g.orientation)
+      );
+    },
+  });
+
+  // first gesture to activate wins: move = piece drag, quick release = tap,
+  // hold still = long press / arrow
+  return useCompetingGestures(piecePan, arrowPan, tapGesture);
 }
+
+const LONG_PRESS_MS = 400;
 
 function clamp(v: number, min: number, max: number): number {
   'worklet';
