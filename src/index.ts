@@ -1,4 +1,3 @@
-import Chessboard from './components/Chessboard/Chessboard';
-
-export type { ClearPremoves } from './components/Chessboard/Chessboard';
-export default Chessboard;
+export * from './types';
+export * from './defaults';
+export * from './utils';

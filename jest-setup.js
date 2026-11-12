@@ -46,16 +46,3 @@ jest.mock('react-native-svg', () => {
     Polygon: MockSvg,
   };
 });
-
-// Mock @mgcrea/react-native-dnd (ESM package; avoid transform and native deps in Jest)
-jest.mock('@mgcrea/react-native-dnd', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  return {
-    __esModule: true,
-    DndProvider: ({ children }) => React.createElement(View, {}, children),
-    Draggable: ({ children }) => React.createElement(View, {}, children),
-    Droppable: ({ children }) => React.createElement(View, {}, children),
-    useDraggable: () => ({ state: { value: 'idle' }, props: {} }),
-  };
-});
