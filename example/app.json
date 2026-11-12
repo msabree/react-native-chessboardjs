@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "chessboardjs example",
+    "slug": "react-native-chessboardjs-example",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": { "bundleIdentifier": "com.msabree.chessboardjs.example" },
+    "android": { "package": "com.msabree.chessboardjs.example" }
+  }
+}

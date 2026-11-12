@@ -6,7 +6,16 @@ jest.mock('react-native', () => {
     View: (props) => React.createElement('View', props),
     Text: (props) => React.createElement('Text', props),
     Pressable: (props) => React.createElement('Pressable', props),
-    StyleSheet: { create: (s) => s },
+    StyleSheet: {
+      create: (s) => s,
+      absoluteFill: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+      },
+    },
     Dimensions: { get: () => ({ width: 320, height: 320 }) },
   };
 });
