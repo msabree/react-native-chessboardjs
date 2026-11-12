@@ -16,6 +16,8 @@ export function PieceLayer() {
     chessboardRows,
     chessboardColumns,
     boardOrientation,
+    draggingPiece,
+    draggingPieceGhostStyle,
   } = useChessboardContext();
 
   if (!squareWidth) return null;
@@ -37,7 +39,12 @@ export function PieceLayer() {
             pieceType={pieceType}
             square={square}
             size={squareWidth}
-            style={{ position: 'absolute', left: x, top: y }}
+            style={[
+              { position: 'absolute', left: x, top: y },
+              !draggingPiece?.isSparePiece && draggingPiece?.position === square
+                ? draggingPieceGhostStyle
+                : {},
+            ]}
           />
         );
       })}

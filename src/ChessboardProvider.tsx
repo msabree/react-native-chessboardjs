@@ -1,4 +1,14 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useSharedValue } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 import type { PropsWithChildren } from 'react';
 import {
   defaultAlphaNotationStyle,
@@ -18,6 +28,7 @@ import { defaultPieces } from './pieces';
 import type {
   ArrowOptions,
   ChessboardOptions,
+  DraggingPieceDataType,
   PositionDataType,
   SquareDataType,
 } from './types';
@@ -55,13 +66,37 @@ type Resolved = Required<
 
 export type ChessboardContextType = Resolved & {
   board: SquareDataType[][];
+  /** Position as displayed, including an accepted drop the parent has not rendered yet. */
   currentPosition: PositionDataType;
+  draggingPiece: DraggingPieceDataType | null;
+  /** Square under the dragged piece, null when off board. */
+  dragOverSquare: string | null;
+  /** Finger position while dragging, board local px. UI thread values. */
+  dragX: SharedValue<number>;
+  dragY: SharedValue<number>;
+  /** Internal drag lifecycle, called from the board gesture. */
+  dragApi: DragApi;
   /** Board width in px, 0 until known. */
   boardWidth: number;
   squareWidth: number;
   setMeasuredWidth: (w: number) => void;
   isWrapped: boolean;
 };
+
+export type DragApi = {
+  start: (square: string) => void;
+  over: (square: string | null) => void;
+  end: (targetSquare: string | null) => void;
+  cancel: () => void;
+};
+
+type PendingDrop = {
+  base: PositionDataType;
+  position: PositionDataType;
+};
+
+/** Keep an accepted drop on screen until the parent updates `position`. */
+const PENDING_DROP_TIMEOUT_MS = 1000;
 
 const ChessboardContext = createContext<ChessboardContextType | null>(null);
 
@@ -131,9 +166,113 @@ export function ChessboardProvider({
     [chessboardRows, chessboardColumns, boardOrientation]
   );
 
-  const currentPosition = useMemo(
+  const positionFromProps = useMemo(
     () => toPositionObject(position, chessboardRows, chessboardColumns),
     [position, chessboardRows, chessboardColumns]
+  );
+
+  // drag state: React renders on start, square change and end only
+  const [draggingPiece, setDraggingPiece] =
+    useState<DraggingPieceDataType | null>(null);
+  const [dragOverSquare, setDragOverSquare] = useState<string | null>(null);
+  const [pendingDrop, setPendingDrop] = useState<PendingDrop | null>(null);
+  const dragX = useSharedValue(0);
+  const dragY = useSharedValue(0);
+
+  const currentPosition =
+    pendingDrop && pendingDrop.base === positionFromProps
+      ? pendingDrop.position
+      : positionFromProps;
+
+  // parent rendered a new position (or gave up): drop the optimistic one
+  useEffect(() => {
+    if (!pendingDrop) return;
+    if (pendingDrop.base !== positionFromProps) {
+      setPendingDrop(null);
+      return;
+    }
+    const t = setTimeout(() => setPendingDrop(null), PENDING_DROP_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [pendingDrop, positionFromProps]);
+
+  // latest values for the stable drag api below
+  const latest = useRef({
+    currentPosition,
+    positionFromProps,
+    draggingPiece,
+    allowDragging,
+    canDragPiece: handlers.canDragPiece,
+    onPieceDrag: handlers.onPieceDrag,
+    onPieceDrop: handlers.onPieceDrop,
+    onPieceDragCancel: handlers.onPieceDragCancel,
+  });
+  latest.current = {
+    currentPosition,
+    positionFromProps,
+    draggingPiece,
+    allowDragging,
+    canDragPiece: handlers.canDragPiece,
+    onPieceDrag: handlers.onPieceDrag,
+    onPieceDrop: handlers.onPieceDrop,
+    onPieceDragCancel: handlers.onPieceDragCancel,
+  };
+
+  const start = useCallback((square: string) => {
+    const l = latest.current;
+    const piece = l.currentPosition[square];
+    if (!l.allowDragging || !piece) return;
+    const args = { isSparePiece: false, piece, square };
+    if (l.canDragPiece && !l.canDragPiece(args)) return;
+    const dragging = {
+      isSparePiece: false,
+      position: square,
+      pieceType: piece.pieceType,
+    };
+    latest.current.draggingPiece = dragging;
+    l.onPieceDrag?.(args);
+    setDraggingPiece(dragging);
+    setDragOverSquare(square);
+  }, []);
+
+  const over = useCallback((square: string | null) => {
+    if (!latest.current.draggingPiece) return;
+    setDragOverSquare(square);
+  }, []);
+
+  const end = useCallback((targetSquare: string | null) => {
+    const l = latest.current;
+    const dragging = l.draggingPiece;
+    if (!dragging) return;
+    latest.current.draggingPiece = null;
+
+    const accepted =
+      l.onPieceDrop?.({
+        piece: dragging,
+        sourceSquare: dragging.position,
+        targetSquare,
+      }) ?? false;
+
+    if (accepted && targetSquare && targetSquare !== dragging.position) {
+      const next = { ...l.currentPosition };
+      delete next[dragging.position];
+      next[targetSquare] = { pieceType: dragging.pieceType };
+      setPendingDrop({ base: l.positionFromProps, position: next });
+    }
+    setDraggingPiece(null);
+    setDragOverSquare(null);
+  }, []);
+
+  const cancel = useCallback(() => {
+    if (!latest.current.draggingPiece) return;
+    latest.current.draggingPiece = null;
+    setDraggingPiece(null);
+    setDragOverSquare(null);
+    latest.current.onPieceDragCancel?.();
+  }, []);
+
+  const dragApi = useMemo<DragApi>(
+    () => ({ start, over, end, cancel }),
+    [start, over, end, cancel]
   );
 
   const value: ChessboardContextType = {
@@ -172,6 +311,11 @@ export function ChessboardProvider({
     ...handlers,
     board,
     currentPosition,
+    draggingPiece,
+    dragOverSquare,
+    dragX,
+    dragY,
+    dragApi,
     boardWidth,
     squareWidth: boardWidth / chessboardColumns,
     setMeasuredWidth,

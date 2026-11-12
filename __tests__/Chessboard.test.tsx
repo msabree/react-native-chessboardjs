@@ -1,6 +1,7 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 import type { ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Chessboard, ChessboardProvider } from '../src';
 import type { ChessboardOptions } from '../src';
 
@@ -9,13 +10,22 @@ const flat = (s: unknown): Record<string, unknown> =>
     ? Object.assign({}, ...s.flat(Infinity as 1).filter(Boolean))
     : ((s as Record<string, unknown>) ?? {});
 
+let mounted: ReactTestRenderer[] = [];
+afterEach(() => {
+  act(() => mounted.forEach((m) => m.unmount()));
+  mounted = [];
+});
+
 function render(options: ChessboardOptions): ReactTestRenderer {
   let r!: ReactTestRenderer;
   act(() => {
     r = renderer.create(
-      <Chessboard options={{ boardWidth: 320, ...options }} />
+      <GestureHandlerRootView>
+        <Chessboard options={{ boardWidth: 320, ...options }} />
+      </GestureHandlerRootView>
     );
   });
+  mounted.push(r);
   return r;
 }
 
@@ -121,26 +131,31 @@ describe('Chessboard render', () => {
     let r!: ReactTestRenderer;
     act(() => {
       r = renderer.create(
-        <ChessboardProvider
-          options={{ boardWidth: 320, position: { e4: { pieceType: 'wP' } } }}
-        >
-          <Chessboard />
-        </ChessboardProvider>
+        <GestureHandlerRootView>
+          <ChessboardProvider
+            options={{ boardWidth: 320, position: { e4: { pieceType: 'wP' } } }}
+          >
+            <Chessboard />
+          </ChessboardProvider>
+        </GestureHandlerRootView>
       );
     });
+    mounted.push(r);
     expect(byPrefix(r, 'piece-')).toHaveLength(1);
   });
 
   it('waits for layout when boardWidth is not given', () => {
     let r!: ReactTestRenderer;
     act(() => {
-      r = renderer.create(<Chessboard />);
+      r = renderer.create(
+        <GestureHandlerRootView>
+          <Chessboard />
+        </GestureHandlerRootView>
+      );
     });
+    mounted.push(r);
     expect(byPrefix(r, 'square-')).toHaveLength(0);
-    const outer = r.root.find(
-      (n) =>
-        typeof n.type === 'string' && typeof n.props.onLayout === 'function'
-    );
+    const outer = byId(r, 'chessboard-container');
     act(() =>
       outer.props.onLayout({ nativeEvent: { layout: { width: 200 } } })
     );

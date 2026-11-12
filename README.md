@@ -1,233 +1,184 @@
-<div align="center" markdown="1">
+<div align="center">
 
 # react-native-chessboardjs
 
-<img src="./media/iPhoneChessboard.png" alt="react chessboard" width="300">
+A React Native chessboard with real drag and drop. Same API as [react-chessboard](https://github.com/Clariity/react-chessboard) v5, so web and mobile code read the same.
+
+<img src="./media/iPhoneChessboard.png" alt="react-native-chessboardjs" width="300">
 
 </div>
 
-## What is react-native-chessboardjs?
+> **1.0 is in progress.** Done: options API, board rendering, utils, drag and drop. Coming: taps, animations, arrows, spare pieces.
 
-A React Native chessboard with drag-and-drop, promotion dialogs, premoves, and customizable styling. Built on **@mgcrea/react-native-dnd** for gestures and **react-native-svg** for piece graphics. The API is inspired by [react-chessboard](https://www.npmjs.com/package/react-chessboard) and uses FEN for position and callbacks for moves, promotion, and square clicks.
+## Why
+
+- **Pieces stay on top while dragging.** Every piece lives in one layer above the squares, so a dragged piece never slides under the board.
+- **Smooth.** The dragged piece moves on the UI thread. React renders once when a drag starts and once when it ends.
+- **No measuring.** The square under your finger is plain math from board width and orientation. Works inside scroll views, modals and rotated screens.
+- **Feels like the web.** Same `options` object, same callbacks and arguments as react-chessboard v5.
 
 ## Requirements
 
-- **React** (any recent version; tested with 18.x and 19.x)
-- **React Native** (e.g. 0.72+)
-- **Node** `>=16`
-- **Expo**: works with Expo; if you use a development build, no extra config. Expo Go may work for basic usage; native modules (e.g. gesture handler, reanimated) are part of the SDK.
+Built for the latest stack only (Expo SDK 58 or equivalent):
 
-## Installation
+| Package | Version |
+| --- | --- |
+| react | 19.3+ |
+| react-native | 0.86+ (New Architecture) |
+| react-native-gesture-handler | 3.3+ |
+| react-native-reanimated | 4.7+ |
+| react-native-worklets | 0.13+ |
+| react-native-svg | 15.16+ |
 
-```bash
-npm i react-native-chessboardjs
-# or
-yarn add react-native-chessboardjs
+Need an older stack? Use 0.4.x.
+
+## Install
+
+```sh
+npx expo install react-native-chessboardjs react-native-gesture-handler react-native-reanimated react-native-worklets react-native-svg
 ```
 
-### Dependencies
+Wrap your app in `GestureHandlerRootView` (Expo Router does this for you):
 
-The library ships with these as **dependencies** (they install automatically):
+```tsx
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-- `@mgcrea/react-native-dnd` ^2.5.3
-- `react-native-gesture-handler` ^2.13.2
-- `react-native-reanimated` ^3.5.4
-- `react-native-svg` ^15.0.0
-
-**Peer dependencies** (your app must provide them):
-
-- `react`
-- `react-native`
-
-In a monorepo or with strict peer resolution, ensure the four dependencies above are installed and linked in the app that uses the board.
-
-### Metro configuration (file: link or package outside app root)
-
-If you install the package via `file:` (e.g. `"react-native-chessboardjs": "file:../../react-native-chessboardjs"`) or use it from a path outside your app root, Metro may fail to resolve the module or resolve `react` / `react-native` from the wrong place. In your **app’s** `metro.config.js`, add the package path to `watchFolders` and point `react` and `react-native` at your app’s `node_modules`:
-
-```js
-const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
-
-const config = getDefaultConfig(__dirname);
-
-// Path to the package (adjust if your layout differs)
-const linkedPackagePath = path.resolve(__dirname, '../../react-native-chessboardjs');
-config.watchFolders = [...(config.watchFolders || []), linkedPackagePath];
-
-// Resolve react/react-native from the app when bundling the linked package
-const projectRoot = __dirname;
-config.resolver.extraNodeModules = {
-  ...config.resolver.extraNodeModules,
-  react: path.resolve(projectRoot, 'node_modules/react'),
-  'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
-};
-
-module.exports = config;
+export default function App() {
+  return <GestureHandlerRootView style={{ flex: 1 }}>{/* ... */}</GestureHandlerRootView>;
+}
 ```
-
-Restart Metro with `npx expo start --clear` (or your bundler’s cache-clear) after changing Metro config.
-
-### iOS
-
-```bash
-cd ios && pod install && cd ..
-```
-
-If you have issues, add to your Podfile:
-
-```ruby
-pod 'RNReanimated', :path => '../node_modules/react-native-reanimated'
-pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
-```
-
-### Android
-
-No extra setup beyond linking. Ensure your app has the required native modules for the dependencies above.
 
 ## Usage
 
-### TypeScript
-
-Default export is the board; ref and props are typed:
-
-```ts
-import Chessboard, { type ClearPremoves, type ChessBoardProps, type Square, type Piece } from 'react-native-chessboardjs';
-
-const ref = useRef<ClearPremoves>(null);
-
-// Clear premoves programmatically (e.g. on square click)
-ref.current?.clearPremoves();
-ref.current?.clearPremoves(false); // optional: clear last piece colour only
-```
-
-### Example
-
-Uses [chess.js](https://github.com/jhlywa/chess.js) (e.g. `^1.2.0`) for move validation.
-
 ```tsx
-import { useRef, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import Chessboard, { type ClearPremoves } from 'react-native-chessboardjs';
+import { useState } from 'react';
 import { Chess } from 'chess.js';
+import { Chessboard } from 'react-native-chessboardjs';
 
-function App() {
-  const chessboardRef = useRef<ClearPremoves>(null);
-  const [chessGame] = useState(() => new Chess());
-  const [optionSquares, setOptionSquares] = useState<Record<string, object>>({});
-  const [moveFrom, setMoveFrom] = useState('');
-
-  const resetFirstMove = (square: string) => {
-    const hasOptions = getMoveOptions(square);
-    if (hasOptions) setMoveFrom(square);
-  };
-
-  const getMoveOptions = (square: string) => {
-    const moves = chessGame.moves({ square, verbose: true });
-    if (moves.length === 0) return false;
-    const newSquares: Record<string, object> = {};
-    moves.forEach((move) => {
-      newSquares[move.to] = {
-        backgroundColor: 'green',
-        height: 15,
-        width: 15,
-        borderRadius: 50,
-      };
-    });
-    setOptionSquares(newSquares);
-    return true;
-  };
+export function Game() {
+  const [game] = useState(() => new Chess());
+  const [fen, setFen] = useState(game.fen());
 
   return (
-    <View style={styles.container}>
-      <Chessboard
-        ref={chessboardRef}
-        customDarkSquareStyle={styles.customDarkSquareStyle}
-        customLightSquareStyle={styles.customLightSquareStyle}
-        position={chessGame.fen()}
-        customSquareStyles={optionSquares}
-        arePremovesAllowed={false}
-        onPieceDrop={(sourceSquare, targetSquare, piece) => {
+    <Chessboard
+      options={{
+        position: fen,
+        onPieceDrop: ({ sourceSquare, targetSquare }) => {
+          if (!targetSquare) return false;
           try {
-            chessGame.move({
-              from: sourceSquare,
-              to: targetSquare,
-              promotion: (piece?.[1] ?? 'q') as 'q' | 'r' | 'b' | 'n',
-            });
-            setMoveFrom('');
-            setOptionSquares({});
+            game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
+            setFen(game.fen());
             return true;
           } catch {
-            return false;
+            return false; // illegal move, piece goes back
           }
-        }}
-        onSquareClick={(square) => {
-          chessboardRef.current?.clearPremoves();
-          if (!moveFrom) {
-            resetFirstMove(square);
-            return true;
-          }
-          try {
-            chessGame.move({
-              from: moveFrom,
-              to: square,
-              promotion: 'q',
-            });
-            setMoveFrom('');
-            setOptionSquares({});
-            return true;
-          } catch {
-            resetFirstMove(square);
-            return false;
-          }
-        }}
-        isDraggablePiece={({ piece }) => chessGame.turn() === piece[0]}
-        onPromotionCheck={(sourceSquare, targetSquare, piece) => {
-          const isPawnPromo =
-            (piece === 'wp' && sourceSquare[1] === '7' && targetSquare[1] === '8') ||
-            (piece === 'bp' && sourceSquare[1] === '2' && targetSquare[1] === '1');
-          return isPawnPromo && Math.abs(sourceSquare.charCodeAt(0) - targetSquare.charCodeAt(0)) <= 1;
-        }}
-      />
-    </View>
+        },
+      }}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, marginTop: 32 },
-  customDarkSquareStyle: { backgroundColor: '#D2691E' },
-  customLightSquareStyle: { backgroundColor: '#DEB887' },
-});
-
-export default App;
 ```
 
-## Props
+The board fills the width of its parent. Pass `boardWidth` to fix it.
 
-In callbacks, **piece** uses a lowercase letter: `'wk'`, `'bq'`, `'wp'`, etc. (e.g. white king = `'wk'`, black pawn = `'bp'`).
+## Options
 
-| Prop | Default | Description |
-|------|---------|-------------|
-| `ref` | — | Optional. Ref object with `clearPremoves(clearLastPieceColour?: boolean)` to clear the premove queue (e.g. on square click). |
-| `boardOrientation` | `'white'` | `'white'` or `'black'`. The chosen color is at the bottom. |
-| `customDarkSquareStyle` | `{ backgroundColor: 'black' }` | Style object for dark squares. |
-| `customLightSquareStyle` | `{ backgroundColor: 'white' }` | Style object for light squares. |
-| `customBoardStyle` | — | Style object for the board container (e.g. border). |
-| `customSquareStyles` | `{}` | Keyed by square (e.g. `'e4'`). Styles applied on top of base square styles. |
-| `position` | Start FEN | FEN string for the board position. Use `'start'` or the standard start FEN for the initial position. |
-| `size` | — | Optional `{ width, height }`. Board width; height unused. If omitted, uses window width. |
-| `onPress` | — | Optional. If provided, wraps the board in a touchable and calls this on press. |
-| `onPieceDrop` | **required** | `(sourceSquare, targetSquare, piece) => boolean`. Called when a piece is dropped. Return `true` if the move is accepted. |
-| `onSquareClick` | `() => true` | `(square) => boolean`. Called when a square is tapped. |
-| `onPromotionCheck` | — | `(sourceSquare, targetSquare, piece) => boolean`. Return `true` when the move is a promotion (promotion dialog is shown). |
-| `isDraggablePiece` | `() => true` | `({ piece }) => boolean`. Return `false` to disable dragging for that piece. |
-| `arePremovesAllowed` | `false` | If `true`, the user can queue a move when it is not their turn (executed when the turn switches). |
-| `whiteKingInCheck` | `false` | When `true`, highlights the white king square (e.g. red) to show check. |
-| `blackKingInCheck` | `false` | When `true`, highlights the black king square to show check. |
+All options are optional. Names and defaults match react-chessboard v5. Styles are React Native `ViewStyle` / `TextStyle`.
 
-## Contributing
+### Board
 
-See the [contributing guide](CONTRIBUTING.md) for development workflow and how to contribute.
+| Option | Type | Default | |
+| --- | --- | --- | --- |
+| `id` | `string` | `'chessboard'` | Prefix for testIDs. Use a unique id per board. |
+| `position` | `string \| PositionDataType` | `'start'` | FEN string, `'start'`, or `{ e4: { pieceType: 'wP' } }`. |
+| `boardOrientation` | `'white' \| 'black'` | `'white'` | |
+| `boardWidth` | `number` | parent width | Mobile only. |
+| `chessboardRows` | `number` | `8` | |
+| `chessboardColumns` | `number` | `8` | |
+| `pieces` | `PieceRenderObject` | `defaultPieces` | `{ wK: ({ size, square }) => <Svg … /> }` |
+| `showNotation` | `boolean` | `true` | |
+
+### Styles
+
+| Option | Default |
+| --- | --- |
+| `boardStyle` | `{ overflow: 'hidden' }` |
+| `squareStyle` | centered content |
+| `squareStyles` | `{}`, per square, e.g. `{ e4: { backgroundColor: 'yellow' } }` |
+| `darkSquareStyle` | `{ backgroundColor: '#B58863' }` |
+| `lightSquareStyle` | `{ backgroundColor: '#F0D9B5' }` |
+| `dropSquareStyle` | 1px black border on the square under the dragged piece |
+| `draggingPieceStyle` | `{ transform: [{ scale: 1.2 }] }` |
+| `draggingPieceGhostStyle` | `{ opacity: 0.5 }`, the piece left behind on its square |
+| `darkSquareNotationStyle`, `lightSquareNotationStyle` | notation colors |
+| `alphaNotationStyle`, `numericNotationStyle` | notation position and size |
+| `squareRenderer` | `({ piece, square, children }) => ReactElement`. `children` is the square's notation. Pieces are drawn in their own layer above the squares. |
+
+### Dragging
+
+| Option | Type | Default | |
+| --- | --- | --- | --- |
+| `allowDragging` | `boolean` | `true` | |
+| `allowDragOffBoard` | `boolean` | `true` | When false, the piece stays inside the board. |
+| `dragActivationDistance` | `number` | `1` | Points the finger moves before a drag starts. |
+| `canDragPiece` | `({ isSparePiece, piece, square }) => boolean` | | |
+| `onPieceDrag` | `({ isSparePiece, piece, square }) => void` | | Drag started. |
+| `onPieceDrop` | `({ piece, sourceSquare, targetSquare }) => boolean` | | Return `true` to accept. `targetSquare` is `null` when dropped off the board. |
+| `onPieceDragCancel` | `() => void` | | Drag interrupted by the system. |
+
+### Taps, animation, arrows (coming in 1.0)
+
+`onSquareClick`, `onPieceClick`, `onSquareLongPress` (mobile version of `onSquareRightClick`), `showAnimations`, `animationDurationInMs`, `allowDrawingArrows`, `arrows`, `arrowOptions`, `clearArrowsOnClick`, `clearArrowsOnPositionChange`, `onArrowsChange`.
+
+### Not on mobile
+
+Hover and mouse events (`onMouseOverSquare`, `onMouseOutSquare`, `onSquareMouseDown`, `onSquareMouseUp`), `allowAutoScroll`, and arrow modifier keys. `onSquareRightClick` becomes `onSquareLongPress`.
+
+## ChessboardProvider
+
+Same as v5. Wrap a board (and later, spare pieces) to share state, and read it with `useChessboardContext()`:
+
+```tsx
+<ChessboardProvider options={{ position: fen, onPieceDrop }}>
+  <Chessboard />
+</ChessboardProvider>
+```
+
+## Utils
+
+Exported for building your own UI: `fenStringToPositionObject`, `generateBoard`, `getPositionUpdates`, `getPromotionUpdates`, `getRelativeCoords`, `getSquareOrigin`, `pointToSquare`, plus the row/column helpers from v5.
+
+## Example app
+
+`example/` is an Expo app that loads the library from `src`, so edits show up live.
+
+```sh
+yarn install
+yarn example start   # Expo Go
+yarn example ios     # dev build
+```
+
+## Migrating from 0.4
+
+1.0 is a rewrite. Props moved into one `options` object that matches react-chessboard v5:
+
+| 0.4 | 1.0 |
+| --- | --- |
+| `<Chessboard position onPieceDrop … />` | `<Chessboard options={{ position, onPieceDrop … }} />` |
+| `onPieceDrop(source, target, piece)` | `onPieceDrop({ sourceSquare, targetSquare, piece })`, `piece.pieceType` is `'wP'` style |
+| `isDraggablePiece({ piece })` | `canDragPiece({ piece, square, isSparePiece })` |
+| `customDarkSquareStyle` / `customLightSquareStyle` | `darkSquareStyle` / `lightSquareStyle` |
+| `customSquareStyles` | `squareStyles` |
+| `customBoardStyle` | `boardStyle` |
+| `size.width` | `boardWidth` |
+| `whiteKingInCheck` / `blackKingInCheck` | `squareStyles` on the king's square |
+| `onPromotionCheck`, promotion dialog | removed, handle promotion in your app (as on web) |
+| premoves | removed, handle in your app (as on web) |
+| `@mgcrea/react-native-dnd` dependency | gone |
+
+## Credits
+
+API and utils follow [react-chessboard](https://github.com/Clariity/react-chessboard) (MIT). Default pieces are the cburnett set (CC BY-SA 3.0, Colin M.L. Burnett).
 
 ## License
 

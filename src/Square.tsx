@@ -29,7 +29,11 @@ export const Square = memo(function Square({
     numericNotationStyle,
     squareRenderer,
     currentPosition,
+    draggingPiece,
+    dragOverSquare,
+    dropSquareStyle,
   } = useChessboardContext();
+  const isOver = draggingPiece !== null && dragOverSquare === squareId;
 
   const notationColor = isLightSquare
     ? lightSquareNotationStyle
@@ -56,6 +60,7 @@ export const Square = memo(function Square({
         squareStyle,
         isLightSquare ? lightSquareStyle : darkSquareStyle,
         squareStyles[squareId],
+        isOver ? dropSquareStyle : null,
       ]}
     >
       {squareRenderer

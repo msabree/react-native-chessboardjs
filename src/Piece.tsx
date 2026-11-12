@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { View } from 'react-native';
-import type { ViewStyle } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import type { PieceRenderObject } from './types';
 
 type Props = {
@@ -8,7 +8,7 @@ type Props = {
   pieceType: string;
   size: number;
   square?: string;
-  style?: ViewStyle | ViewStyle[];
+  style?: StyleProp<ViewStyle>;
 };
 
 /** Renders one piece at `size`. Positioning is the caller's job. */

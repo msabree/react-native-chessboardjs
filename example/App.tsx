@@ -33,6 +33,7 @@ export default function App() {
               boardOrientation: orientation,
               showNotation: notation,
               squareStyles: { e4: { backgroundColor: 'rgba(255,255,0,0.4)' } },
+              canDragPiece: ({ piece }) => piece.pieceType[0] === game.turn(),
               onPieceDrop: ({ sourceSquare, targetSquare }) => {
                 if (!targetSquare) return false;
                 try {

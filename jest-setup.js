@@ -1,57 +1,41 @@
 /* eslint-env jest */
-// Mock react-native so it's not loaded from node_modules (Flow syntax breaks Jest's Babel)
-jest.mock('react-native', () => {
-  const React = require('react');
-  return {
-    View: (props) => React.createElement('View', props),
-    Text: (props) => React.createElement('Text', props),
-    Pressable: (props) => React.createElement('Pressable', props),
-    StyleSheet: {
-      create: (s) => s,
-      absoluteFill: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-      },
-    },
-    Dimensions: { get: () => ({ width: 320, height: 320 }) },
-  };
-});
-// Mock react-native-reanimated so it doesn't pull in react-native
+// Minimal mocks for what the board uses. Worklets run synchronously on JS.
 jest.mock('react-native-reanimated', () => {
-  const React = require('react');
   const { View } = require('react-native');
   return {
     __esModule: true,
-    default: View,
-    setUpTests: jest.fn(),
-    createAnimatedComponent: (c) => c,
-    FadeIn: null,
-    FadeOut: null,
-    SlideInDown: null,
-    useSharedValue: (v) => ({ value: v }),
-    useAnimatedStyle: () => ({}),
-    withSpring: (v) => v,
-    runOnJS: (fn) => fn,
+    default: { View },
+    useSharedValue: (v) => {
+      const React = require('react');
+      return React.useRef({ value: v }).current;
+    },
+    useAnimatedStyle: (fn) => fn(),
   };
 });
 
-// Mock react-native-svg (avoids Touchable dependency in Jest and speeds up tests)
+jest.mock('react-native-worklets', () => ({
+  scheduleOnRN: (fn, ...args) => fn(...args),
+}));
+
+// Plain views are enough to test layout; real SVG rendering is a device concern.
 jest.mock('react-native-svg', () => {
   const React = require('react');
   const { View } = require('react-native');
-  const MockSvg = (props) => React.createElement(View, props);
+  const Mock = (props) => React.createElement(View, props);
   return {
     __esModule: true,
-    default: MockSvg,
-    Svg: MockSvg,
-    G: MockSvg,
-    Path: MockSvg,
-    Circle: MockSvg,
-    Line: MockSvg,
-    Marker: MockSvg,
-    Polygon: MockSvg,
+    default: Mock,
+    Svg: Mock,
+    G: Mock,
+    Path: Mock,
+    Circle: Mock,
   };
 });
+
+// Gesture handler: run gesture callbacks on JS in tests (no Reanimated runtime).
+for (const base of ['src', 'lib/module']) {
+  jest.mock(
+    `react-native-gesture-handler/${base}/handlers/gestures/reanimatedWrapper`,
+    () => ({ Reanimated: undefined, Worklets: undefined })
+  );
+}
