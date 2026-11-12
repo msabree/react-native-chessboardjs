@@ -2,11 +2,16 @@
   "name": "react-native-chessboardjs",
   "version": "1.0.0",
   "description": "A React Native chessboard with drag and drop, matching the react-chessboard v5 API.",
-  "main": "lib/commonjs/index",
-  "module": "lib/module/index",
-  "types": "lib/typescript/src/index.d.ts",
-  "react-native": "src/index",
-  "source": "src/index",
+  "main": "./lib/module/index.js",
+  "types": "./lib/typescript/src/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./lib/typescript/src/index.d.ts",
+      "default": "./lib/module/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "src",
     "lib",
@@ -65,7 +70,7 @@
     "prettier": "^3.0.0",
     "react": "19.3.0",
     "react-native": "0.88.1",
-    "react-native-builder-bob": "^0.23.0",
+    "react-native-builder-bob": "^0.44.1",
     "react-native-gesture-handler": "~3.3.0",
     "react-native-reanimated": "4.7.1",
     "react-native-svg": "15.16.0",
@@ -146,8 +151,12 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "commonjs",
-      "module",
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
       [
         "typescript",
         {

@@ -4,7 +4,7 @@
 
 A React Native chessboard with real drag and drop. Same API as [react-chessboard](https://github.com/Clariity/react-chessboard) v5, so web and mobile code read the same.
 
-<img src="./media/iPhoneChessboard.png" alt="react-native-chessboardjs" width="300">
+<img src="./media/screenshot.png" alt="react-native-chessboardjs: tap to move with legal move dots" width="320">
 
 </div>
 
@@ -28,7 +28,7 @@ Built for the latest stack only (Expo SDK 58 or equivalent):
 | react-native-worklets | 0.13+ |
 | react-native-svg | 15.16+ |
 
-Need an older stack? Use 0.4.x.
+Ships ES modules with TypeScript types. Need an older stack? Use 0.4.x.
 
 ## Install
 
