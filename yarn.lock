@@ -3477,6 +3477,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jest/create-cache-key-function@npm:^29.7.0":
+  version: 29.7.0
+  resolution: "@jest/create-cache-key-function@npm:29.7.0"
+  dependencies:
+    "@jest/types": ^29.6.3
+  checksum: 681bc761fa1d6fa3dd77578d444f97f28296ea80755e90e46d1c8fa68661b9e67f54dd38b988742db636d26cf160450dc6011892cec98b3a7ceb58cad8ff3aae
+  languageName: node
+  linkType: hard
+
 "@jest/environment@npm:^29.7.0":
   version: 29.7.0
   resolution: "@jest/environment@npm:29.7.0"
@@ -4195,6 +4204,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/jest-preset@npm:0.88.1":
+  version: 0.88.1
+  resolution: "@react-native/jest-preset@npm:0.88.1"
+  dependencies:
+    "@jest/create-cache-key-function": ^29.7.0
+    "@react-native/js-polyfills": 0.88.1
+    babel-jest: ^29.7.0
+    jest-environment-node: ^29.7.0
+    regenerator-runtime: ^0.13.2
+  peerDependencies:
+    react: ^19.2.3
+  checksum: 80d0cc054b64b50bc130e1c7bb4c27d7b13a4567080841e888f08aae240a62dfd1863c1bd5fd689f3819e962ea4e911c896333f1806a1e8ba9621a73f8412fc2
+  languageName: node
+  linkType: hard
+
 "@react-native/js-polyfills@npm:0.88.1":
   version: 0.88.1
   resolution: "@react-native/js-polyfills@npm:0.88.1"
@@ -4269,23 +4293,6 @@ __metadata:
   dependencies:
     "@sinonjs/commons": ^3.0.0
   checksum: 614d30cb4d5201550c940945d44c9e0b6d64a888ff2cd5b357f95ad6721070d6b8839cd10e15b76bf5e14af0bcc1d8f9ec00d49a46318f1f669a4bec1d7f3148
-  languageName: node
-  linkType: hard
-
-"@testing-library/jest-native@npm:^5.4.3":
-  version: 5.4.3
-  resolution: "@testing-library/jest-native@npm:5.4.3"
-  dependencies:
-    chalk: ^4.1.2
-    jest-diff: ^29.0.1
-    jest-matcher-utils: ^29.0.1
-    pretty-format: ^29.0.3
-    redent: ^3.0.0
-  peerDependencies:
-    react: ">=16.0.0"
-    react-native: ">=0.59"
-    react-test-renderer: ">=16.0.0"
-  checksum: 2a4ebfeff09523860771cfddac6fcc3faa2f855dc63255b9efc016e727132320f16f935cec9717d6d79cfa6715fce6ded877215c8ec85d236a5c3136a65b1020
   languageName: node
   linkType: hard
 
@@ -10292,7 +10299,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-diff@npm:^29.0.1, jest-diff@npm:^29.7.0":
+"jest-diff@npm:^29.7.0":
   version: 29.7.0
   resolution: "jest-diff@npm:29.7.0"
   dependencies:
@@ -10380,7 +10387,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-matcher-utils@npm:^29.0.1, jest-matcher-utils@npm:^29.7.0":
+"jest-matcher-utils@npm:^29.7.0":
   version: 29.7.0
   resolution: "jest-matcher-utils@npm:29.7.0"
   dependencies:
@@ -13103,7 +13110,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-format@npm:^29.0.0, pretty-format@npm:^29.0.3, pretty-format@npm:^29.7.0":
+"pretty-format@npm:^29.0.0, pretty-format@npm:^29.7.0":
   version: 29.7.0
   resolution: "pretty-format@npm:29.7.0"
   dependencies:
@@ -13382,8 +13389,8 @@ __metadata:
     "@evilmartians/lefthook": ^1.5.0
     "@react-native/babel-preset": 0.88.1
     "@react-native/eslint-config": 0.88.1
+    "@react-native/jest-preset": 0.88.1
     "@release-it/conventional-changelog": ^5.0.0
-    "@testing-library/jest-native": ^5.4.3
     "@types/jest": ^29.5.0
     "@types/react": ~19.3.0
     "@types/react-test-renderer": ^18.0.0
@@ -13392,7 +13399,6 @@ __metadata:
     del-cli: ^5.0.0
     eslint: ^8.57.0
     eslint-config-prettier: ^9.0.0
-    eslint-plugin-ft-flow: ^2.0.1
     eslint-plugin-prettier: ^5.0.0
     jest: ^29.7.0
     prettier: ^3.0.0
@@ -13407,12 +13413,12 @@ __metadata:
     release-it: ^17.0.0
     typescript: ~5.8.0
   peerDependencies:
-    react: ">=19"
-    react-native: ">=0.81"
-    react-native-gesture-handler: ">=3.0.0"
-    react-native-reanimated: ">=4.0.0"
-    react-native-svg: ">=15.0.0"
-    react-native-worklets: ">=0.5.0"
+    react: ">=19.3.0"
+    react-native: ">=0.86.0"
+    react-native-gesture-handler: ">=3.3.0"
+    react-native-reanimated: ">=4.7.0"
+    react-native-svg: ">=15.16.0"
+    react-native-worklets: ">=0.13.0"
   languageName: unknown
   linkType: soft
 

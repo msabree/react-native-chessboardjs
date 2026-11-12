@@ -10,17 +10,7 @@
   "files": [
     "src",
     "lib",
-    "android",
-    "ios",
-    "cpp",
-    "*.podspec",
-    "!ios/build",
-    "!android/build",
-    "!android/gradle",
-    "!android/gradlew",
-    "!android/gradlew.bat",
-    "!android/local.properties",
-    "!__tests__",
+    "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
     "!**/.*"
@@ -61,7 +51,6 @@
     "@react-native/eslint-config": "0.88.1",
     "@react-native/jest-preset": "0.88.1",
     "@release-it/conventional-changelog": "^5.0.0",
-    "@testing-library/jest-native": "^5.4.3",
     "@types/jest": "^29.5.0",
     "@types/react": "~19.3.0",
     "@types/react-test-renderer": "^18.0.0",
@@ -70,7 +59,6 @@
     "del-cli": "^5.0.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-ft-flow": "^2.0.1",
     "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.7.0",
     "prettier": "^3.0.0",
@@ -96,12 +84,6 @@
   "workspaces": [
     "example"
   ],
-  "compilerOptions": {
-    "typeRoots": [
-      "src/@types",
-      "node_modules/@types"
-    ]
-  },
   "packageManager": "yarn@3.6.1",
   "engines": {
     "node": ">=20"
@@ -150,8 +132,7 @@
   "eslintIgnore": [
     "node_modules/",
     "lib/",
-    "coverage/",
-    "src/chessboard-lib/"
+    "coverage/"
   ],
   "prettier": {
     "quoteProps": "consistent",
